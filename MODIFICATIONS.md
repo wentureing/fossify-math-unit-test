@@ -32,6 +32,13 @@
 - 注释稳定版：`espressoCore = "3.5.1"`
 - 注释测试版：`espressoCore = "3.7.0-alpha05"`
 
+### 4. settings.gradle.kts
+添加阿里云Maven镜像仓库
+- maven("https://maven.aliyun.com/repository/google")
+- maven("https://maven.aliyun.com/repository/central")
+- maven("https://maven.aliyun.com/repository/public")
+
+
 ## 合规声明
 本项目为原始项目的**衍生作品**，完整保留原始 GPL-3.0 许可证，所有修改内容开源、可追溯，允许任何人自由使用、修改、分发。
 
@@ -71,6 +78,13 @@ Added these folders under app/src/:
 Commented out these lines:
 - espressoCore = "3.5.1"
 - espressoCore = "3.7.0-alpha05"
+
+### 4. settings.gradle.kts
+Added Alibaba Cloud Maven mirrors for faster dependency download:
+- maven("https://maven.aliyun.com/repository/google")
+- maven("https://maven.aliyun.com/repository/central")
+- maven("https://maven.aliyun.com/repository/public")
+
 
 ## License Notice
 This is a derivative work. All original licenses and copyrights are kept.
