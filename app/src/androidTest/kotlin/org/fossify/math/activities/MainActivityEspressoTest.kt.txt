@@ -1,0 +1,159 @@
+package org.fossify.math.activities
+
+import org.fossify.math.R
+
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.longClick
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * 计算器应用 Espresso 集成测试
+ * 测试真实设备上的UI交互和计算逻辑
+ */
+@RunWith(AndroidJUnit4::class)
+class MainActivityEspressoTest {
+
+    // 自动启动并管理MainActivity生命周期，替代原Robolectric的手动创建
+    @get:Rule
+    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+
+    /**
+     * 测试环境初始化验证
+     * 确认Activity和关键控件正常加载
+     */
+    @Test
+    fun testEnvironment() {
+        // 验证初始结果显示为0
+        onView(withId(R.id.result))
+            .check(matches(withText("0")))
+            .check(matches(isDisplayed()))
+
+        // 验证关键按钮存在且可见
+        onView(withId(R.id.btn_1)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_plus)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_multiply)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_divide)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_clear)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_equals)).check(matches(isDisplayed()))
+    }
+
+    /**
+     * 测试加法运算：1 + 2 = 3
+     */
+    @Test
+    fun testAddTwoNumbers() {
+        clickView(R.id.btn_1)
+        clickView(R.id.btn_plus)
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_equals)
+
+        onView(withId(R.id.result))
+            .check(matches(withText("3")))
+
+        println("testAddTwoNumbers executed, result=3")
+    }
+
+    /**
+     * 测试乘法运算：2 × 3 = 6
+     */
+    @Test
+    fun testMultiplyTwoNumbers() {
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_multiply)
+        clickView(R.id.btn_3)
+        clickView(R.id.btn_equals)
+
+        onView(withId(R.id.result))
+            .check(matches(withText("6")))
+
+        println("testMultiplyTwoNumbers executed, result=6")
+    }
+
+    /**
+     * 测试除法运算：6 ÷ 2 = 3
+     */
+    @Test
+    fun testDivideTwoNumbers() {
+        clickView(R.id.btn_6)
+        clickView(R.id.btn_divide)
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_equals)
+
+        onView(withId(R.id.result))
+            .check(matches(withText("3")))
+
+        println("testDivideTwoNumbers executed, result=3")
+    }
+
+    /**
+     * 测试点击清除按钮：清除最后一位数字
+     * 输入"12" → 点击清除 → 结果应为"1"
+     */
+    @Test
+    fun testClearSingleDigit() {
+        clickView(R.id.btn_1)
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_clear)
+
+        onView(withId(R.id.result))
+            .check(matches(withText("1")))
+
+        println("testClearSingleDigit executed, result=1")
+    }
+
+    /**
+     * 测试点击清除按钮：清除最后一位数字
+     * 输入"21" → 点击清除 → 结果应为"2"
+     */
+    @Test
+    fun testClearSingleDigit2() {
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_1)
+        clickView(R.id.btn_clear)
+
+        onView(withId(R.id.result))
+            .check(matches(withText("2")))
+
+        println("testClearSingleDigit2 executed, result=2")
+    }
+
+    /**
+     * 【新增】测试长按清除按钮：清空全部内容
+     * 输入"123" → 长按清除 → 结果应为"0"
+     */
+    @Test
+    fun testClearAllOnLongPress() {
+        // 输入多位数验证长按清空效果
+        clickView(R.id.btn_1)
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_3)
+
+        // 长按清除按钮（核心修改点）
+        onView(withId(R.id.btn_clear))
+            .perform(longClick())
+
+        // 断言结果为0
+        onView(withId(R.id.result))
+            .check(matches(withText("0")))
+
+        println("testClearAllOnLongPress executed, result=0")
+    }
+
+    /**
+     * 封装点击操作：模拟用户真实点击
+     * 替代原Robolectric的直接调用view.performClick()
+     */
+    private fun clickView(id: Int) {
+        onView(withId(id))
+            .perform(click())
+    }
+}

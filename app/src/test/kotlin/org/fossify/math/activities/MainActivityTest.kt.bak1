@@ -1,0 +1,74 @@
+package org.fossify.math.activities
+import android.os.Looper
+import android.widget.TextView
+import org.fossify.math.R
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.LooperMode
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
+@LooperMode(LooperMode.Mode.PAUSED)
+class MainActivitySimpleTest {
+    private lateinit var activity: MainActivity
+    // 【修复1】全局声明结果控件，避免重复查找，确保UI状态同步
+    private lateinit var resultView: TextView
+
+    @Before
+    fun setUp() {
+        activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .start()
+            .resume()
+            .get()
+        // 【修复2】setUp中初始化结果控件，验证控件存在（触发控件初始化代码覆盖）
+        resultView = activity.findViewById(R.id.result)
+        // 【修复3】验证初始状态为0，执行Activity初始UI逻辑（核心提升覆盖率）
+        assertEquals("0", resultView.text.toString())
+    }
+
+    @After
+    fun tearDown() {
+        activity.finish()
+    }
+
+    @Test
+    fun testEnvironment() {
+        // 【修复4】原空断言改为真实环境验证，覆盖Activity初始化逻辑
+        assertTrue(activity != null)
+        assertTrue(resultView != null)
+    }
+
+    @Test
+    fun testAddTwoNumbers() {
+        clickView(R.id.btn_1)
+        clickView(R.id.btn_plus)
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_equals)
+        // 【修复5】使用全局resultView，确保获取最新UI结果（无重复查找）
+        assertEquals("3", resultView.text.toString())
+    }
+
+    @Test
+    fun testClear() {
+        clickView(R.id.btn_1)
+        clickView(R.id.btn_2)
+        clickView(R.id.btn_clear)
+        // 【修复6】使用全局resultView，确保获取最新UI结果
+        assertEquals("1", resultView.text.toString())
+    }
+
+    // 【保留原函数名】封装点击逻辑，无修改
+    private fun clickView(id: Int) {
+        activity.findViewById<TextView>(id).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+}

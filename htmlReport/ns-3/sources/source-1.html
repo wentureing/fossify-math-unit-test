@@ -1,0 +1,187 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > HistoryAdapter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.adapters</a>
+</div>
+
+<h1>Coverage Summary for Class: HistoryAdapter (org.fossify.math.adapters)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">HistoryAdapter</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">HistoryAdapter$ViewHolder</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.adapters
+&nbsp;
+&nbsp;import android.view.View
+&nbsp;import android.view.ViewGroup
+&nbsp;import androidx.recyclerview.widget.RecyclerView
+&nbsp;import org.fossify.commons.extensions.copyToClipboard
+&nbsp;import org.fossify.commons.extensions.getProperTextColor
+&nbsp;import org.fossify.math.activities.SimpleActivity
+&nbsp;import org.fossify.math.databinding.HistoryViewBinding
+&nbsp;import org.fossify.math.helpers.CalculatorImpl
+&nbsp;import org.fossify.math.models.History
+&nbsp;
+<b class="nc">&nbsp;class HistoryAdapter(</b>
+<b class="nc">&nbsp;    val activity: SimpleActivity,</b>
+<b class="nc">&nbsp;    val items: List&lt;History&gt;,</b>
+<b class="nc">&nbsp;    val calc: CalculatorImpl,</b>
+<b class="nc">&nbsp;    val itemClick: () -&gt; Unit</b>
+&nbsp;) :
+&nbsp;    RecyclerView.Adapter&lt;HistoryAdapter.ViewHolder&gt;() {
+&nbsp;
+<b class="nc">&nbsp;    private var textColor = activity.getProperTextColor()</b>
+&nbsp;
+&nbsp;    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+<b class="nc">&nbsp;        ViewHolder(HistoryViewBinding.inflate(activity.layoutInflater, parent, false))</b>
+&nbsp;
+&nbsp;
+&nbsp;    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+<b class="nc">&nbsp;        val item = items[position]</b>
+<b class="nc">&nbsp;        holder.bindView(item)</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    override fun getItemCount() = items.size</b>
+&nbsp;
+<b class="nc">&nbsp;    inner class ViewHolder(private val binding: HistoryViewBinding) :</b>
+<b class="nc">&nbsp;        RecyclerView.ViewHolder(binding.root) {</b>
+&nbsp;        fun bindView(item: History): View {
+<b class="nc">&nbsp;            itemView.apply {</b>
+<b class="nc">&nbsp;                binding.itemFormula.text = item.formula</b>
+<b class="nc">&nbsp;                binding.itemResult.text = item.result</b>
+<b class="nc">&nbsp;                binding.itemFormula.setTextColor(textColor)</b>
+<b class="nc">&nbsp;                binding.itemResult.setTextColor(textColor)</b>
+&nbsp;
+<b class="nc">&nbsp;                setOnClickListener {</b>
+<b class="nc">&nbsp;                    calc.addNumberToFormula(item.result)</b>
+<b class="nc">&nbsp;                    itemClick()</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                setOnLongClickListener {</b>
+<b class="nc">&nbsp;                    activity.baseContext.copyToClipboard(item.result)</b>
+<b class="nc">&nbsp;                    true</b>
+&nbsp;                }
+<b class="nc">&nbsp;            }</b>
+&nbsp;
+<b class="nc">&nbsp;            return itemView</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-05-18 14:38</div>
+</div>
+</body>
+</html>

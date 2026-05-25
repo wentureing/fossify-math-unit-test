@@ -1,0 +1,198 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NumberFormatHelper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.helpers</a>
+</div>
+
+<h1>Coverage Summary for Class: NumberFormatHelper (org.fossify.math.helpers)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NumberFormatHelper</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">NumberFormatHelper$Companion</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.helpers
+&nbsp;
+&nbsp;import java.math.BigDecimal
+&nbsp;import java.text.DecimalFormat
+&nbsp;import java.text.DecimalFormatSymbols
+&nbsp;
+&nbsp;class NumberFormatHelper(
+<b class="nc">&nbsp;    val decimalSeparator: String = getDecimalSeparator(),</b>
+<b class="nc">&nbsp;    val groupingSeparator: String = getGroupingSeparator()</b>
+&nbsp;) {
+&nbsp;    companion object {
+&nbsp;        private const val MAX_FRACTION_DIGITS = 15
+&nbsp;    }
+&nbsp;
+&nbsp;    fun bigDecimalToString(bd: BigDecimal): String {
+<b class="nc">&nbsp;        val symbols = DecimalFormatSymbols.getInstance()</b>
+&nbsp;
+<b class="nc">&nbsp;        val formatter = DecimalFormat()</b>
+<b class="nc">&nbsp;        formatter.maximumFractionDigits = MAX_FRACTION_DIGITS</b>
+<b class="nc">&nbsp;        formatter.decimalFormatSymbols = symbols</b>
+<b class="nc">&nbsp;        formatter.isGroupingUsed = true</b>
+&nbsp;
+<b class="nc">&nbsp;        val result = formatter.format(bd)</b>
+<b class="nc">&nbsp;        return if (result.contains(decimalSeparator)) {</b>
+<b class="nc">&nbsp;            result.trimEnd(&#39;0&#39;).trimEnd(decimalSeparator.single())</b>
+<b class="nc">&nbsp;        } else {</b>
+<b class="nc">&nbsp;            result</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Suppress(&quot;SwallowedException&quot;)
+&nbsp;    fun addGroupingSeparators(str: String): String {
+&nbsp;        return try {
+<b class="nc">&nbsp;            bigDecimalToString(removeGroupingSeparator(str).toBigDecimal())</b>
+&nbsp;        } catch (_: NumberFormatException) {
+&nbsp;            // Return original string if it cannot be parsed as a valid number
+<b class="nc">&nbsp;            str</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    fun removeGroupingSeparator(str: String): String {
+<b class="nc">&nbsp;        return str.replace(groupingSeparator, &quot;&quot;).replace(decimalSeparator, &quot;.&quot;)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun formatForDisplay(input: String): String {
+<b class="nc">&nbsp;        var formatted = addGroupingSeparators(input)</b>
+&nbsp;        // allow writing numbers like 0.003
+<b class="nc">&nbsp;        if (input.contains(decimalSeparator)) {</b>
+<b class="nc">&nbsp;            val firstPart = formatted.substringBefore(decimalSeparator)</b>
+<b class="nc">&nbsp;            val lastPart = input.substringAfter(decimalSeparator)</b>
+<b class="nc">&nbsp;            formatted = &quot;$firstPart$decimalSeparator$lastPart&quot;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return formatted</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;fun getDecimalSeparator(): String {
+&nbsp;    return DecimalFormatSymbols.getInstance().decimalSeparator.toString()
+&nbsp;}
+&nbsp;
+&nbsp;fun getGroupingSeparator(): String {
+&nbsp;    return DecimalFormatSymbols.getInstance().groupingSeparator.toString()
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-05-18 14:38</div>
+</div>
+</body>
+</html>

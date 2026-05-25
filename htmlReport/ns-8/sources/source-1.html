@@ -1,0 +1,606 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CalculatorImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.helpers</a>
+</div>
+
+<h1>Coverage Summary for Class: CalculatorImpl (org.fossify.math.helpers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CalculatorImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/156)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/277)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.helpers
+&nbsp;
+&nbsp;import android.content.Context
+&nbsp;import com.ezylang.evalex.Expression
+&nbsp;import org.fossify.commons.extensions.showErrorToast
+&nbsp;import org.fossify.commons.extensions.toast
+&nbsp;import org.fossify.math.R
+&nbsp;import org.fossify.math.models.History
+&nbsp;import org.json.JSONObject
+&nbsp;import org.json.JSONTokener
+&nbsp;import java.math.BigDecimal
+&nbsp;
+&nbsp;class CalculatorImpl(
+&nbsp;    calculator: Calculator,
+<b class="nc">&nbsp;    private val context: Context,</b>
+<b class="nc">&nbsp;    calculatorState: String = &quot;&quot;</b>
+&nbsp;) {
+<b class="nc">&nbsp;    private var callback: Calculator? = calculator</b>
+<b class="nc">&nbsp;    private var stateInstance = calculatorState</b>
+<b class="nc">&nbsp;    private var currentResult = &quot;0&quot;</b>
+<b class="nc">&nbsp;    private var previousCalculation = &quot;&quot;</b>
+<b class="nc">&nbsp;    private var baseValue = BigDecimal.ZERO</b>
+<b class="nc">&nbsp;    private var secondValue = BigDecimal.ZERO</b>
+<b class="nc">&nbsp;    private var inputDisplayedFormula = &quot;0&quot;</b>
+<b class="nc">&nbsp;    private var lastKey = &quot;&quot;</b>
+<b class="nc">&nbsp;    private var lastOperation = &quot;&quot;</b>
+<b class="nc">&nbsp;    private val operations = listOf(&quot;+&quot;, &quot;-&quot;, &quot;×&quot;, &quot;÷&quot;, &quot;^&quot;, &quot;%&quot;, &quot;√&quot;)</b>
+<b class="nc">&nbsp;    private val operationsRegex = &quot;[-+×÷^%√]&quot;.toPattern()</b>
+<b class="nc">&nbsp;    private val formatter = NumberFormatHelper()</b>
+&nbsp;
+<b class="nc">&nbsp;    private val decimalSeparator: String get() = formatter.decimalSeparator</b>
+<b class="nc">&nbsp;    private val groupingSeparator: String get() = formatter.groupingSeparator</b>
+&nbsp;    private val numbersRegex: Regex get() =
+<b class="nc">&nbsp;        &quot;[^0-9${Regex.escape(decimalSeparator)}${Regex.escape(groupingSeparator)}]&quot;.toRegex()</b>
+&nbsp;
+<b class="nc">&nbsp;    init {</b>
+<b class="nc">&nbsp;        if (stateInstance != &quot;&quot;) {</b>
+<b class="nc">&nbsp;            setFromSaveInstanceState(stateInstance)</b>
+&nbsp;        }
+<b class="nc">&nbsp;        showNewResult(currentResult)</b>
+<b class="nc">&nbsp;        showNewFormula(previousCalculation)</b>
+<b class="nc">&nbsp;    }</b>
+&nbsp;
+&nbsp;    private fun addDigit(number: Int) {
+<b class="nc">&nbsp;        if (inputDisplayedFormula == &quot;0&quot;) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = &quot;&quot;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        inputDisplayedFormula += number</b>
+<b class="nc">&nbsp;        addThousandsDelimiter()</b>
+<b class="nc">&nbsp;        showNewResult(inputDisplayedFormula)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun zeroClicked() {
+<b class="nc">&nbsp;        val valueToCheck = inputDisplayedFormula.trimStart(&#39;-&#39;).removeGroupSeparator()</b>
+<b class="nc">&nbsp;        val value = valueToCheck.substring(valueToCheck.indexOfAny(operations) + 1)</b>
+<b class="nc">&nbsp;        if (value != &quot;0&quot; || value.contains(decimalSeparator)) {</b>
+<b class="nc">&nbsp;            addDigit(0)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun decimalClicked() {
+<b class="nc">&nbsp;        val valueToCheck = inputDisplayedFormula.trimStart(&#39;-&#39;).replace(groupingSeparator, &quot;&quot;)</b>
+<b class="nc">&nbsp;        val value = valueToCheck.substring(valueToCheck.indexOfAny(operations) + 1)</b>
+<b class="nc">&nbsp;        if (!value.contains(decimalSeparator)) {</b>
+<b class="nc">&nbsp;            when {</b>
+<b class="nc">&nbsp;                value == &quot;0&quot; &amp;&amp; !valueToCheck.contains(operationsRegex.toRegex()) -&gt; {</b>
+<b class="nc">&nbsp;                    inputDisplayedFormula = &quot;0$decimalSeparator&quot;</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                value == &quot;&quot; -&gt; inputDisplayedFormula += &quot;0$decimalSeparator&quot;</b>
+<b class="nc">&nbsp;                else -&gt; inputDisplayedFormula += decimalSeparator</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        lastKey = DECIMAL</b>
+<b class="nc">&nbsp;        showNewResult(inputDisplayedFormula)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun addThousandsDelimiter() {
+<b class="nc">&nbsp;        val valuesToCheck = numbersRegex.split(inputDisplayedFormula)</b>
+<b class="nc">&nbsp;            .filter { it.trim().isNotEmpty() }</b>
+<b class="nc">&nbsp;        valuesToCheck.forEach {</b>
+<b class="nc">&nbsp;            val formatted = formatter.formatForDisplay(it)</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = inputDisplayedFormula.replace(it, formatted)</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun handleOperation(operation: String) {
+<b class="nc">&nbsp;        if (inputDisplayedFormula == &quot;NaN&quot;) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = &quot;0&quot;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (inputDisplayedFormula == &quot;&quot;) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = &quot;0&quot;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (operation == ROOT &amp;&amp; inputDisplayedFormula == &quot;0&quot;) {</b>
+<b class="nc">&nbsp;            if (lastKey != DIGIT) {</b>
+<b class="nc">&nbsp;                inputDisplayedFormula = &quot;1√&quot;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        val lastChar = inputDisplayedFormula.last().toString()</b>
+<b class="nc">&nbsp;        if (lastChar == decimalSeparator) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = inputDisplayedFormula.dropLast(1)</b>
+<b class="nc">&nbsp;        } else if (operations.contains(lastChar)) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = inputDisplayedFormula.dropLast(1)</b>
+<b class="nc">&nbsp;            inputDisplayedFormula += getSign(operation)</b>
+<b class="nc">&nbsp;        } else if (!inputDisplayedFormula.trimStart(&#39;-&#39;).contains(operationsRegex.toRegex())) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula += getSign(operation)</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (lastKey == DIGIT || lastKey == DECIMAL) {</b>
+<b class="nc">&nbsp;            if (lastOperation != &quot;&quot; &amp;&amp; operation == PERCENT) {</b>
+<b class="nc">&nbsp;                handlePercent()</b>
+<b class="nc">&nbsp;                lastOperation = &quot;&quot;</b>
+&nbsp;            } else {
+&nbsp;                // split to multiple lines just to see when does the crash happen
+<b class="nc">&nbsp;                secondValue = when (operation) {</b>
+<b class="nc">&nbsp;                    PLUS -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    MINUS -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    MULTIPLY -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    DIVIDE -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    ROOT -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    POWER -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    PERCENT -&gt; getSecondValue()</b>
+<b class="nc">&nbsp;                    else -&gt; getSecondValue()</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                calculateResult()</b>
+&nbsp;
+<b class="nc">&nbsp;                if (!operations.contains(inputDisplayedFormula.last().toString())) {</b>
+<b class="nc">&nbsp;                    if (!inputDisplayedFormula.contains(&quot;÷&quot;)) {</b>
+<b class="nc">&nbsp;                        inputDisplayedFormula += getSign(operation)</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (getSecondValue() == BigDecimal.ZERO &amp;&amp; inputDisplayedFormula.contains(&quot;÷&quot;)) {</b>
+<b class="nc">&nbsp;            lastKey = DIVIDE</b>
+<b class="nc">&nbsp;            lastOperation = DIVIDE</b>
+<b class="nc">&nbsp;        } else if(operation != PERCENT) {</b>
+<b class="nc">&nbsp;            lastKey = operation</b>
+<b class="nc">&nbsp;            lastOperation = operation</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        showNewResult(inputDisplayedFormula)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun turnToNegative(): Boolean {
+<b class="nc">&nbsp;        if (inputDisplayedFormula.isEmpty()) {</b>
+<b class="nc">&nbsp;            return false</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (!inputDisplayedFormula.trimStart(&#39;-&#39;).any { it.toString() in operations } &amp;&amp;</b>
+<b class="nc">&nbsp;            try {</b>
+<b class="nc">&nbsp;                inputDisplayedFormula.removeGroupSeparator().toBigDecimal() != BigDecimal.ZERO</b>
+&nbsp;            } catch (_: Exception) {
+<b class="nc">&nbsp;                false</b>
+&nbsp;            }) {
+<b class="nc">&nbsp;            inputDisplayedFormula = if (inputDisplayedFormula.first() == &#39;-&#39;) {</b>
+<b class="nc">&nbsp;                inputDisplayedFormula.substring(1)</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                &quot;-$inputDisplayedFormula&quot;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            showNewResult(inputDisplayedFormula)</b>
+<b class="nc">&nbsp;            return true</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return false</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // handle percents manually, it doesn&#39;t seem to be possible via EvalEx. &quot;%&quot; is used only for modulo there
+&nbsp;    // handle cases like 10+200% here
+&nbsp;    @Suppress(&quot;SwallowedException&quot;)
+&nbsp;    private fun handlePercent() {
+<b class="nc">&nbsp;        val result = try {</b>
+<b class="nc">&nbsp;            calculatePercentage(baseValue, getSecondValue(), lastOperation)</b>
+&nbsp;        } catch (_: ArithmeticException) {
+&nbsp;            // Return zero if percentage calculation fails (e.g., division by zero)
+<b class="nc">&nbsp;            BigDecimal.ZERO</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        showNewFormula(&quot;${baseValue.format()}${getSign(lastOperation)}${getSecondValue().format()}%&quot;)</b>
+<b class="nc">&nbsp;        inputDisplayedFormula = result.format()</b>
+<b class="nc">&nbsp;        showNewResult(result.format())</b>
+<b class="nc">&nbsp;        baseValue = result</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun handleEquals() {
+<b class="nc">&nbsp;        if (lastKey == EQUALS) {</b>
+<b class="nc">&nbsp;            calculateResult()</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (lastKey != DIGIT &amp;&amp; lastKey != DECIMAL) {</b>
+&nbsp;            return
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        secondValue = getSecondValue()</b>
+<b class="nc">&nbsp;        calculateResult()</b>
+<b class="nc">&nbsp;        if ((lastOperation == DIVIDE || lastOperation == PERCENT) &amp;&amp; secondValue == BigDecimal.ZERO) {</b>
+<b class="nc">&nbsp;            lastKey = DIGIT</b>
+&nbsp;            return
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        lastKey = EQUALS</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun getSecondValue(): BigDecimal {
+<b class="nc">&nbsp;        val valueToCheck = inputDisplayedFormula.trimStart(&#39;-&#39;).removeGroupSeparator()</b>
+&nbsp;
+<b class="nc">&nbsp;        var value = valueToCheck.substring(valueToCheck.indexOfAny(operations) + 1)</b>
+<b class="nc">&nbsp;        if (value == &quot;&quot;) {</b>
+<b class="nc">&nbsp;            value = &quot;0&quot;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return try {</b>
+<b class="nc">&nbsp;            value.toBigDecimal()</b>
+<b class="nc">&nbsp;        } catch (e: NumberFormatException) {</b>
+<b class="nc">&nbsp;            context.showErrorToast(e)</b>
+<b class="nc">&nbsp;            BigDecimal.ZERO</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun calculateResult() {
+<b class="nc">&nbsp;        if (lastOperation == ROOT &amp;&amp; inputDisplayedFormula.startsWith(&quot;√&quot;)) {</b>
+<b class="nc">&nbsp;            baseValue = BigDecimal.ONE</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (lastKey != EQUALS) {</b>
+<b class="nc">&nbsp;            val valueToCheck = inputDisplayedFormula.trimStart(&#39;-&#39;).removeGroupSeparator()</b>
+&nbsp;
+<b class="nc">&nbsp;            if (inputDisplayedFormula.startsWith(&quot;√&quot;)) {</b>
+<b class="nc">&nbsp;                val numberAfterRoot = valueToCheck.substring(1)</b>
+&nbsp;                try {
+<b class="nc">&nbsp;                    secondValue = numberAfterRoot.toBigDecimal()</b>
+&nbsp;                } catch (e: NumberFormatException) {
+<b class="nc">&nbsp;                    context.showErrorToast(e)</b>
+<b class="nc">&nbsp;                    secondValue = BigDecimal.ZERO</b>
+&nbsp;                }
+&nbsp;            } else {
+<b class="nc">&nbsp;                val parts = valueToCheck.split(operationsRegex).filter { it != &quot;&quot; }</b>
+<b class="nc">&nbsp;                if (parts.isEmpty()) {</b>
+&nbsp;                    return
+&nbsp;                }
+&nbsp;
+&nbsp;                try {
+<b class="nc">&nbsp;                    baseValue = parts.first().toBigDecimal()</b>
+&nbsp;                } catch (e: NumberFormatException) {
+<b class="nc">&nbsp;                    context.showErrorToast(e)</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                if (inputDisplayedFormula.startsWith(&quot;-&quot;)) {</b>
+<b class="nc">&nbsp;                    baseValue = baseValue.negate()</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                secondValue = parts.getOrNull(1)?.toBigDecimal() ?: secondValue</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (lastOperation != &quot;&quot;) {</b>
+<b class="nc">&nbsp;            val sign = getSign(lastOperation)</b>
+<b class="nc">&nbsp;            val formattedBaseValue = baseValue.format().removeGroupSeparator()</b>
+<b class="nc">&nbsp;            val formatterSecondValue = secondValue.format().removeGroupSeparator()</b>
+&nbsp;
+<b class="nc">&nbsp;            val expression = if (sign == &quot;√&quot;) {</b>
+<b class="nc">&nbsp;                &quot;$formattedBaseValue*SQRT($formatterSecondValue)&quot;</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                &quot;$formattedBaseValue$sign$formatterSecondValue&quot;</b>
+<b class="nc">&nbsp;                    .replace(&quot;×&quot;, &quot;*&quot;)</b>
+<b class="nc">&nbsp;                    .replace(&quot;÷&quot;, &quot;/&quot;)</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            try {
+<b class="nc">&nbsp;                if (sign == &quot;÷&quot; &amp;&amp; secondValue == BigDecimal.ZERO) {</b>
+<b class="nc">&nbsp;                    context.toast(R.string.formula_divide_by_zero_error)</b>
+&nbsp;                    return
+&nbsp;                }
+&nbsp;
+&nbsp;                // handle percents manually, it doesn&#39;t seem to be possible via EvalEx.
+&nbsp;                // &quot;%&quot; is used only for modulo there
+&nbsp;                // handle cases like 10%200 here
+<b class="nc">&nbsp;                val result = if (sign == &quot;%&quot;) {</b>
+<b class="nc">&nbsp;                    val secondPercentValue = secondValue.divide(BigDecimal(&quot;100&quot;), MATH_CONTEXT)</b>
+<b class="nc">&nbsp;                    val second = secondPercentValue.format().removeGroupSeparator()</b>
+<b class="nc">&nbsp;                    val percentExpression = &quot;$formattedBaseValue*$second&quot;</b>
+<b class="nc">&nbsp;                    val expr = Expression(percentExpression)</b>
+<b class="nc">&nbsp;                    expr.evaluate().numberValue</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    val expr = Expression(expression)</b>
+<b class="nc">&nbsp;                    val evaluationResult = expr.evaluate()</b>
+<b class="nc">&nbsp;                    evaluationResult.numberValue</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                showNewResult(result.format())</b>
+<b class="nc">&nbsp;                val newFormula = &quot;${baseValue.format()}$sign${secondValue.format()}&quot;</b>
+<b class="nc">&nbsp;                HistoryHelper(context).insertOrUpdateHistoryEntry(</b>
+<b class="nc">&nbsp;                    History(</b>
+<b class="nc">&nbsp;                        id = null,</b>
+<b class="nc">&nbsp;                        formula = newFormula,</b>
+<b class="nc">&nbsp;                        result = result.format(),</b>
+<b class="nc">&nbsp;                        timestamp = System.currentTimeMillis()</b>
+&nbsp;                    )
+&nbsp;                )
+<b class="nc">&nbsp;                showNewFormula(newFormula)</b>
+<b class="nc">&nbsp;                inputDisplayedFormula = result.format()</b>
+<b class="nc">&nbsp;                baseValue = result</b>
+&nbsp;            } catch (_: Exception) {
+<b class="nc">&nbsp;                context.toast(org.fossify.commons.R.string.unknown_error_occurred)</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun calculatePercentage(
+&nbsp;        baseValue: BigDecimal,
+&nbsp;        secondValue: BigDecimal,
+&nbsp;        sign: String
+&nbsp;    ): BigDecimal {
+<b class="nc">&nbsp;        if (secondValue == BigDecimal.ZERO) {</b>
+<b class="nc">&nbsp;            throw ArithmeticException(&quot;Division by zero in percentage calculation&quot;)</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return when (sign) {</b>
+<b class="nc">&nbsp;            MULTIPLY -&gt; {</b>
+<b class="nc">&nbsp;                val partial = BigDecimal(&quot;100&quot;).divide(secondValue, MATH_CONTEXT)</b>
+<b class="nc">&nbsp;                baseValue.divide(partial, MATH_CONTEXT)</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            DIVIDE -&gt; {</b>
+<b class="nc">&nbsp;                val partial = BigDecimal(&quot;100&quot;).divide(secondValue, MATH_CONTEXT)</b>
+<b class="nc">&nbsp;                baseValue.multiply(partial, MATH_CONTEXT)</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            PLUS -&gt; {</b>
+<b class="nc">&nbsp;                val partial = baseValue.divide(</b>
+<b class="nc">&nbsp;                    BigDecimal(&quot;100&quot;).divide(secondValue, MATH_CONTEXT), MATH_CONTEXT</b>
+&nbsp;                )
+<b class="nc">&nbsp;                baseValue.add(partial, MATH_CONTEXT)</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            MINUS -&gt; {</b>
+<b class="nc">&nbsp;                val partial = baseValue.divide(</b>
+<b class="nc">&nbsp;                    BigDecimal(&quot;100&quot;).divide(secondValue, MATH_CONTEXT), MATH_CONTEXT</b>
+&nbsp;                )
+<b class="nc">&nbsp;                baseValue.subtract(partial, MATH_CONTEXT)</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            PERCENT -&gt; {</b>
+<b class="nc">&nbsp;                val partial = baseValue.remainder(secondValue, MATH_CONTEXT)</b>
+<b class="nc">&nbsp;                    .divide(BigDecimal(&quot;100&quot;), MATH_CONTEXT)</b>
+<b class="nc">&nbsp;                partial</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            else -&gt; baseValue.divide(</b>
+<b class="nc">&nbsp;                BigDecimal(&quot;100&quot;).multiply(secondValue, MATH_CONTEXT), MATH_CONTEXT</b>
+&nbsp;            )
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun showNewResult(value: String) {
+<b class="nc">&nbsp;        currentResult = value</b>
+<b class="nc">&nbsp;        callback!!.showNewResult(value, context)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun showNewFormula(value: String) {
+<b class="nc">&nbsp;        previousCalculation = value</b>
+<b class="nc">&nbsp;        callback!!.showNewFormula(value, context)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun handleClear() {
+<b class="nc">&nbsp;        val lastDeletedValue = inputDisplayedFormula.lastOrNull().toString()</b>
+&nbsp;
+<b class="nc">&nbsp;        var newValue = inputDisplayedFormula.dropLast(1)</b>
+<b class="nc">&nbsp;        if (newValue == &quot;&quot; || newValue == &quot;0&quot;) {</b>
+<b class="nc">&nbsp;            newValue = &quot;0&quot;</b>
+<b class="nc">&nbsp;            lastKey = CLEAR</b>
+<b class="nc">&nbsp;            resetValues()</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            if (operations.contains(lastDeletedValue) || lastKey == EQUALS) {</b>
+<b class="nc">&nbsp;                lastOperation = &quot;&quot;</b>
+&nbsp;            }
+<b class="nc">&nbsp;            val lastValue = newValue.last().toString()</b>
+<b class="nc">&nbsp;            lastKey = when {</b>
+<b class="nc">&nbsp;                operations.contains(lastValue) -&gt; CLEAR</b>
+<b class="nc">&nbsp;                lastValue == decimalSeparator -&gt; DECIMAL</b>
+<b class="nc">&nbsp;                else -&gt; DIGIT</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        newValue = newValue.trimEnd(groupingSeparator.single())</b>
+<b class="nc">&nbsp;        inputDisplayedFormula = newValue</b>
+<b class="nc">&nbsp;        addThousandsDelimiter()</b>
+<b class="nc">&nbsp;        showNewResult(inputDisplayedFormula)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun handleReset() {
+<b class="nc">&nbsp;        resetValues()</b>
+<b class="nc">&nbsp;        showNewResult(&quot;0&quot;)</b>
+<b class="nc">&nbsp;        showNewFormula(&quot;&quot;)</b>
+<b class="nc">&nbsp;        inputDisplayedFormula = &quot;&quot;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun resetValues() {
+<b class="nc">&nbsp;        baseValue = BigDecimal.ZERO</b>
+<b class="nc">&nbsp;        secondValue = BigDecimal.ZERO</b>
+<b class="nc">&nbsp;        lastKey = &quot;&quot;</b>
+<b class="nc">&nbsp;        lastOperation = &quot;&quot;</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private fun getSign(lastOperation: String) = when (lastOperation) {</b>
+<b class="nc">&nbsp;        MINUS -&gt; &quot;-&quot;</b>
+<b class="nc">&nbsp;        MULTIPLY -&gt; &quot;×&quot;</b>
+<b class="nc">&nbsp;        DIVIDE -&gt; &quot;÷&quot;</b>
+<b class="nc">&nbsp;        PERCENT -&gt; &quot;%&quot;</b>
+<b class="nc">&nbsp;        POWER -&gt; &quot;^&quot;</b>
+<b class="nc">&nbsp;        ROOT -&gt; &quot;√&quot;</b>
+<b class="nc">&nbsp;        else -&gt; &quot;+&quot;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun numpadClicked(id: Int) {
+<b class="nc">&nbsp;        if (inputDisplayedFormula == &quot;NaN&quot;) {</b>
+<b class="nc">&nbsp;            inputDisplayedFormula = &quot;&quot;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (lastKey == EQUALS) {</b>
+<b class="nc">&nbsp;            lastOperation = EQUALS</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        lastKey = DIGIT</b>
+&nbsp;
+<b class="nc">&nbsp;        when (id) {</b>
+<b class="nc">&nbsp;            R.id.btn_decimal -&gt; decimalClicked()</b>
+<b class="nc">&nbsp;            R.id.btn_0 -&gt; zeroClicked()</b>
+<b class="nc">&nbsp;            R.id.btn_1 -&gt; addDigit(1)</b>
+<b class="nc">&nbsp;            R.id.btn_2 -&gt; addDigit(2)</b>
+<b class="nc">&nbsp;            R.id.btn_3 -&gt; addDigit(3)</b>
+<b class="nc">&nbsp;            R.id.btn_4 -&gt; addDigit(4)</b>
+<b class="nc">&nbsp;            R.id.btn_5 -&gt; addDigit(5)</b>
+<b class="nc">&nbsp;            R.id.btn_6 -&gt; addDigit(6)</b>
+<b class="nc">&nbsp;            R.id.btn_7 -&gt; addDigit(7)</b>
+<b class="nc">&nbsp;            R.id.btn_8 -&gt; addDigit(8)</b>
+<b class="nc">&nbsp;            R.id.btn_9 -&gt; addDigit(9)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    fun addNumberToFormula(number: String) {
+<b class="nc">&nbsp;        handleReset()</b>
+<b class="nc">&nbsp;        inputDisplayedFormula = number</b>
+<b class="nc">&nbsp;        addThousandsDelimiter()</b>
+<b class="nc">&nbsp;        showNewResult(inputDisplayedFormula)</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private fun BigDecimal.format() = formatter.bigDecimalToString(this)</b>
+&nbsp;
+<b class="nc">&nbsp;    private fun String.removeGroupSeparator() = formatter.removeGroupingSeparator(this)</b>
+&nbsp;
+&nbsp;    fun getCalculatorStateJson(): JSONObject {
+<b class="nc">&nbsp;        val jsonObj = JSONObject()</b>
+<b class="nc">&nbsp;        jsonObj.put(RES, currentResult)</b>
+<b class="nc">&nbsp;        jsonObj.put(PREVIOUS_CALCULATION, previousCalculation)</b>
+<b class="nc">&nbsp;        jsonObj.put(LAST_KEY, lastKey)</b>
+<b class="nc">&nbsp;        jsonObj.put(LAST_OPERATION, lastOperation)</b>
+<b class="nc">&nbsp;        jsonObj.put(BASE_VALUE, baseValue.toString())</b>
+<b class="nc">&nbsp;        jsonObj.put(SECOND_VALUE, secondValue.toString())</b>
+<b class="nc">&nbsp;        jsonObj.put(INPUT_DISPLAYED_FORMULA, inputDisplayedFormula)</b>
+<b class="nc">&nbsp;        return jsonObj</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun setFromSaveInstanceState(json: String) {
+<b class="nc">&nbsp;        val jsonObject = JSONTokener(json).nextValue() as JSONObject</b>
+<b class="nc">&nbsp;        currentResult = jsonObject.getString(RES)</b>
+<b class="nc">&nbsp;        previousCalculation = jsonObject.getString(PREVIOUS_CALCULATION)</b>
+<b class="nc">&nbsp;        lastKey = jsonObject.getString(LAST_KEY)</b>
+<b class="nc">&nbsp;        lastOperation = jsonObject.getString(LAST_OPERATION)</b>
+<b class="nc">&nbsp;        baseValue = try {</b>
+<b class="nc">&nbsp;            BigDecimal(jsonObject.getString(BASE_VALUE))</b>
+<b class="nc">&nbsp;        } catch (_: Exception) {</b>
+<b class="nc">&nbsp;            BigDecimal.ZERO</b>
+&nbsp;        }
+<b class="nc">&nbsp;        secondValue = try {</b>
+<b class="nc">&nbsp;            BigDecimal(jsonObject.getString(SECOND_VALUE))</b>
+<b class="nc">&nbsp;        } catch (_: Exception) {</b>
+<b class="nc">&nbsp;            BigDecimal.ZERO</b>
+&nbsp;        }
+<b class="nc">&nbsp;        inputDisplayedFormula = jsonObject.getString(INPUT_DISPLAYED_FORMULA)</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-05-18 14:38</div>
+</div>
+</body>
+</html>

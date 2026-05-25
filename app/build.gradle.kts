@@ -1,0 +1,207 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.konan.properties.Properties
+import java.io.FileInputStream
+
+plugins {
+    alias(libs.plugins.android)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.detekt)
+}
+
+val keystorePropertiesFile: File = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+fun hasSigningVars(): Boolean {
+    return providers.environmentVariable("SIGNING_KEY_ALIAS").orNull != null
+            && providers.environmentVariable("SIGNING_KEY_PASSWORD").orNull != null
+            && providers.environmentVariable("SIGNING_STORE_FILE").orNull != null
+            && providers.environmentVariable("SIGNING_STORE_PASSWORD").orNull != null
+}
+
+base {
+    val versionCode = project.property("VERSION_CODE").toString().toInt()
+    archivesName = "calculator-$versionCode"
+}
+
+android {
+    compileSdk = project.libs.versions.app.build.compileSDKVersion.get().toInt()
+
+    defaultConfig {
+        applicationId = project.property("APP_ID").toString()
+        minSdk = project.libs.versions.app.build.minimumSDK.get().toInt()
+        targetSdk = project.libs.versions.app.build.targetSDK.get().toInt()
+        versionName = project.property("VERSION_NAME").toString()
+        versionCode = project.property("VERSION_CODE").toString().toInt()
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            register("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        } else if (hasSigningVars()) {
+            register("release") {
+                keyAlias = providers.environmentVariable("SIGNING_KEY_ALIAS").get()
+                keyPassword = providers.environmentVariable("SIGNING_KEY_PASSWORD").get()
+                storeFile = file(providers.environmentVariable("SIGNING_STORE_FILE").get())
+                storePassword = providers.environmentVariable("SIGNING_STORE_PASSWORD").get()
+            }
+        } else {
+            logger.warn("Warning: No signing config found. Build will be unsigned.")
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+        }
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            if (keystorePropertiesFile.exists() || hasSigningVars()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
+
+    buildFeatures {
+        viewBinding = true
+        compose = true
+        buildConfig = true
+    }
+
+    flavorDimensions.add("variants")
+    productFlavors {
+        register("core")
+        register("foss")
+        register("gplay")
+    }
+
+    compileOptions {
+        val currentJavaVersionFromLibs =
+            JavaVersion.valueOf(libs.versions.app.build.javaVersion.get())
+        sourceCompatibility = currentJavaVersionFromLibs
+        targetCompatibility = currentJavaVersionFromLibs
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+    }
+
+    androidResources {
+        @Suppress("UnstableApiUsage")
+        generateLocaleConfig = true
+    }
+
+    tasks.withType<KotlinCompile> {
+        compilerOptions.jvmTarget.set(
+            JvmTarget.fromTarget(project.libs.versions.app.build.kotlinJVMTarget.get())
+        )
+        compilerOptions.freeCompilerArgs.set(
+            listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+                "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
+                "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+                "-Xcontext-receivers"
+            )
+        )
+    }
+
+    sourceSets {
+        getByName("main").java.directories.add("src/main/kotlin")
+
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = true
+        warningsAsErrors = false
+        baseline = file("lint-baseline.xml")
+        lintConfig = rootProject.file("lint.xml")
+    }
+
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
+    namespace = project.property("APP_ID").toString()
+
+
+    //add:配置robolectric下载源
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+
+                it.jvmArgs("-Xshare:off","-noverify")
+                //修改为阿里云Maven镜像
+                it.systemProperty("robolectric.dependency.repo.id", "aliyun")
+                it.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/public")
+
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
+    }
+}
+
+detekt {
+    baseline = file("detekt-baseline.xml")
+    config.setFrom("$rootDir/detekt.yml")
+    buildUponDefaultConfig = true
+    allRules = false
+}
+
+dependencies {
+    implementation(libs.fossify.commons)
+    implementation(libs.auto.fit.text.view)
+    implementation(libs.evalex)
+    implementation(libs.bundles.lifecycle)
+    implementation(libs.bundles.compose)
+    debugImplementation(libs.bundles.compose.preview)
+
+    implementation(libs.bundles.room)
+    ksp(libs.androidx.room.compiler)
+
+    detektPlugins(libs.compose.detekt)
+
+    //androidTestImplementation(libs.androidx.espresso.core)
+    //add:增加junit、mockk
+    testImplementation("junit:junit:4.13.2")          // JUnit 测试框架
+    testImplementation("io.mockk:mockk:1.13.8")       // Mockk 模拟框架
+    testImplementation("org.robolectric:robolectric:4.13")        //robolectric旧版4.12.1
+    testImplementation("androidx.test:core:1.5.0")   // 基础测试核心库
+
+//    androidTestImplementation("androidx.test:runner:1.7.0-alpha05")
+//    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+//    androidTestImplementation("androidx.test:rules:1.7.0-alpha05")
+    androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+}
+
+

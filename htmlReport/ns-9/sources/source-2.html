@@ -1,0 +1,223 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Converter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.helpers.converters</a>
+</div>
+
+<h1>Coverage Summary for Class: Converter (org.fossify.math.helpers.converters)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Converter</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Converter$Companion</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Converter$DefaultImpls</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">Converter$Unit</td>
+<td class="coverageStat">
+  <span class="percent">
+    60%
+  </span>
+  <span class="absValue">
+    (3/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    58.3%
+  </span>
+  <span class="absValue">
+    (7/12)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (6/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (18/24)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.helpers.converters
+&nbsp;
+&nbsp;import android.content.Context
+&nbsp;import org.fossify.math.R
+&nbsp;import org.fossify.math.helpers.MATH_CONTEXT
+&nbsp;import java.math.BigDecimal
+&nbsp;
+&nbsp;interface Converter {
+&nbsp;    companion object {
+<b class="fc">&nbsp;        val ALL = listOf(</b>
+<b class="fc">&nbsp;            LengthConverter,</b>
+<b class="fc">&nbsp;            AreaConverter,</b>
+<b class="fc">&nbsp;            VolumeConverter,</b>
+<b class="fc">&nbsp;            MassConverter,</b>
+<b class="fc">&nbsp;            TemperatureConverter,</b>
+<b class="fc">&nbsp;            TimeConverter,</b>
+<b class="fc">&nbsp;            SpeedConverter,</b>
+<b class="fc">&nbsp;            PressureConverter,</b>
+<b class="fc">&nbsp;            EnergyConverter</b>
+&nbsp;        )
+&nbsp;    }
+&nbsp;
+&nbsp;    val nameResId: Int
+&nbsp;    val imageResId: Int
+&nbsp;    val units: List&lt;Unit&gt;
+&nbsp;    val defaultTopUnit: Unit
+&nbsp;    val defaultBottomUnit: Unit
+&nbsp;
+&nbsp;    val key: String
+&nbsp;
+<b class="nc">&nbsp;    fun convert(from: ValueWithUnit&lt;Unit&gt;, to: Unit): ValueWithUnit&lt;Unit&gt; {</b>
+<b class="fc">&nbsp;        return ValueWithUnit(to.fromBase(from.unit.toBase(from.value)), to)</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    open class Unit(</b>
+<b class="fc">&nbsp;        val nameResId: Int,</b>
+<b class="fc">&nbsp;        val symbolResId: Int,</b>
+<b class="fc">&nbsp;        val factor: BigDecimal,</b>
+<b class="fc">&nbsp;        val key: String</b>
+&nbsp;    ) {
+<b class="fc">&nbsp;        open fun toBase(value: BigDecimal): BigDecimal = value.multiply(factor, MATH_CONTEXT)</b>
+&nbsp;
+<b class="fc">&nbsp;        open fun fromBase(value: BigDecimal): BigDecimal = value.divide(factor, MATH_CONTEXT)</b>
+&nbsp;
+<b class="nc">&nbsp;        fun withValue(value: BigDecimal) = ValueWithUnit(value, this)</b>
+&nbsp;
+<b class="nc">&nbsp;        fun getNameWithSymbol(context: Context) = context.getString(</b>
+<b class="nc">&nbsp;            R.string.unit_name_with_symbol_format,</b>
+<b class="nc">&nbsp;            context.getString(nameResId),</b>
+<b class="nc">&nbsp;            context.getString(symbolResId)</b>
+&nbsp;        )
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;data class ValueWithUnit&lt;T : Converter.Unit&gt;(val value: BigDecimal, val unit: T)
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-05-18 14:38</div>
+</div>
+</body>
+</html>
