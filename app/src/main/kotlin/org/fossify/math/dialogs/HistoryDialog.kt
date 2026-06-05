@@ -11,13 +11,14 @@ import org.fossify.math.adapters.HistoryAdapter
 import org.fossify.math.databinding.DialogHistoryBinding
 import org.fossify.math.extensions.calculatorDB
 import org.fossify.math.helpers.CalculatorImpl
+import org.fossify.math.helpers.ExpressionFormatter
 import org.fossify.math.models.History
 
 class HistoryDialog(activity: SimpleActivity, items: List<History>, calculator: CalculatorImpl) {
     private var dialog: AlertDialog? = null
+    private val formatter = ExpressionFormatter()
 
     init {
-
         val view = DialogHistoryBinding.inflate(activity.layoutInflater, null, false)
 
         activity.getAlertDialogBuilder()
@@ -33,8 +34,9 @@ class HistoryDialog(activity: SimpleActivity, items: List<History>, calculator: 
                 }
             }
 
-        view.historyList.adapter = HistoryAdapter(activity, items, calculator) {
+        val adapter = HistoryAdapter(activity, items, calculator, formatter) {
             dialog?.dismiss()
         }
+        view.historyList.adapter = adapter
     }
 }

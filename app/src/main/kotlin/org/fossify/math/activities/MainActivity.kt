@@ -33,7 +33,7 @@ import org.fossify.math.helpers.CALCULATOR_STATE
 import org.fossify.math.helpers.Calculator
 import org.fossify.math.helpers.CalculatorImpl
 import org.fossify.math.helpers.DIVIDE
-import org.fossify.math.helpers.HistoryHelper
+import org.fossify.math.helpers.HistoryManager
 import org.fossify.math.helpers.MINUS
 import org.fossify.math.helpers.MULTIPLY
 import org.fossify.math.helpers.PERCENT
@@ -188,11 +188,11 @@ class MainActivity : SimpleActivity(), Calculator {
     }
 
     private fun showHistory() {
-        HistoryHelper(this).getHistory {
-            if (it.isEmpty()) {
+        HistoryManager(this).getHistory { list ->
+            if (list.isEmpty()) {
                 toast(R.string.history_empty)
             } else {
-                HistoryDialog(this, it, calc)
+                HistoryDialog(this, list, calc)
             }
         }
     }

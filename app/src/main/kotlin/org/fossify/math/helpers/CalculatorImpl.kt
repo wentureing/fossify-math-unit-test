@@ -1,11 +1,8 @@
 package org.fossify.math.helpers
 
 import android.content.Context
-import com.ezylang.evalex.Expression
-import org.fossify.commons.extensions.showErrorToast
 import org.fossify.commons.extensions.toast
 import org.fossify.math.R
-import org.fossify.math.models.History
 import org.json.JSONObject
 import org.json.JSONTokener
 import java.math.BigDecimal
@@ -16,401 +13,185 @@ class CalculatorImpl(
     calculatorState: String = ""
 ) {
     private var callback: Calculator? = calculator
-    private var stateInstance = calculatorState
-    private var currentResult = "0"
-    private var previousCalculation = ""
-    private var baseValue = BigDecimal.ZERO
-    private var secondValue = BigDecimal.ZERO
-    private var inputDisplayedFormula = "0"
-    private var lastKey = ""
-    private var lastOperation = ""
-    private val operations = listOf("+", "-", "×", "÷", "^", "%", "√")
-    private val operationsRegex = "[-+×÷^%√]".toPattern()
-    private val formatter = NumberFormatHelper()
 
-    private val decimalSeparator: String get() = formatter.decimalSeparator
-    private val groupingSeparator: String get() = formatter.groupingSeparator
-    private val numbersRegex: Regex get() =
-        "[^0-9${Regex.escape(decimalSeparator)}${Regex.escape(groupingSeparator)}]".toRegex()
+    // 新内部状态
+    private var rawExpression: String = "0"           // 原始格式表达式（. 小数点，无千位分隔符）
+    private var lastResult: BigDecimal? = null        // 上次计算结果
+    private var lastRawExpression: String = ""        // 上次成功求值的原始表达式
+    private var lastKeyType: String = ""              // "digit", "operator", "equals"
+
+    // 依赖新模块
+    private val evaluator = ExpressionEvaluator
+    private val formatter = ExpressionFormatter()
+    private val historyManager = HistoryManager(context)
+    private val errorHandler = ErrorHandler(context)
 
     init {
-        if (stateInstance != "") {
-            setFromSaveInstanceState(stateInstance)
+        if (calculatorState.isNotEmpty()) {
+            setFromSaveInstanceState(calculatorState)
         }
-        showNewResult(currentResult)
-        showNewFormula(previousCalculation)
+        refreshDisplay()
     }
 
-    private fun addDigit(number: Int) {
-        if (inputDisplayedFormula == "0") {
-            inputDisplayedFormula = ""
+    // ==================== 公共方法 ====================
+
+    fun numpadClicked(id: Int) {
+        if (lastKeyType == EQUALS) {
+            // 等号后开始新输入，清空表达式
+            rawExpression = "0"
+            lastResult = null
+            lastRawExpression = ""
+            lastKeyType = ""
         }
 
-        inputDisplayedFormula += number
-        addThousandsDelimiter()
-        showNewResult(inputDisplayedFormula)
-    }
-
-    private fun zeroClicked() {
-        val valueToCheck = inputDisplayedFormula.trimStart('-').removeGroupSeparator()
-        val value = valueToCheck.substring(valueToCheck.indexOfAny(operations) + 1)
-        if (value != "0" || value.contains(decimalSeparator)) {
-            addDigit(0)
-        }
-    }
-
-    private fun decimalClicked() {
-        val valueToCheck = inputDisplayedFormula.trimStart('-').replace(groupingSeparator, "")
-        val value = valueToCheck.substring(valueToCheck.indexOfAny(operations) + 1)
-        if (!value.contains(decimalSeparator)) {
-            when {
-                value == "0" && !valueToCheck.contains(operationsRegex.toRegex()) -> {
-                    inputDisplayedFormula = "0$decimalSeparator"
-                }
-
-                value == "" -> inputDisplayedFormula += "0$decimalSeparator"
-                else -> inputDisplayedFormula += decimalSeparator
-            }
+        val digit = when (id) {
+            R.id.btn_0 -> '0'
+            R.id.btn_1 -> '1'
+            R.id.btn_2 -> '2'
+            R.id.btn_3 -> '3'
+            R.id.btn_4 -> '4'
+            R.id.btn_5 -> '5'
+            R.id.btn_6 -> '6'
+            R.id.btn_7 -> '7'
+            R.id.btn_8 -> '8'
+            R.id.btn_9 -> '9'
+            R.id.btn_decimal -> '.'  // 始终使用点，不用本地化小数点
+            else -> return
         }
 
-        lastKey = DECIMAL
-        showNewResult(inputDisplayedFormula)
-    }
-
-    private fun addThousandsDelimiter() {
-        val valuesToCheck = numbersRegex.split(inputDisplayedFormula)
-            .filter { it.trim().isNotEmpty() }
-        valuesToCheck.forEach {
-            val formatted = formatter.formatForDisplay(it)
-            inputDisplayedFormula = inputDisplayedFormula.replace(it, formatted)
+        if (rawExpression == "0" && digit != '.') {
+            rawExpression = digit.toString()
+        } else {
+            rawExpression += digit
         }
+
+        lastKeyType = DIGIT
+        refreshDisplay()
     }
 
     fun handleOperation(operation: String) {
-        if (inputDisplayedFormula == "NaN") {
-            inputDisplayedFormula = "0"
+        if (lastKeyType == EQUALS) {
+            // 等号后输入运算符，以 lastResult 开始新表达式
+            rawExpression = lastResult?.toPlainString() ?: "0"
+            lastResult = null
+            lastRawExpression = ""
+            lastKeyType = ""
         }
 
-        if (inputDisplayedFormula == "") {
-            inputDisplayedFormula = "0"
-        }
+        // 避免连续输入两个运算符（但允许，由求值时处理）
+        val operator = getSign(operation)  // 返回 + - × ÷ ^ √ %
+        rawExpression += operator
 
-        if (operation == ROOT && inputDisplayedFormula == "0") {
-            if (lastKey != DIGIT) {
-                inputDisplayedFormula = "1√"
-            }
-        }
-
-        val lastChar = inputDisplayedFormula.last().toString()
-        if (lastChar == decimalSeparator) {
-            inputDisplayedFormula = inputDisplayedFormula.dropLast(1)
-        } else if (operations.contains(lastChar)) {
-            inputDisplayedFormula = inputDisplayedFormula.dropLast(1)
-            inputDisplayedFormula += getSign(operation)
-        } else if (!inputDisplayedFormula.trimStart('-').contains(operationsRegex.toRegex())) {
-            inputDisplayedFormula += getSign(operation)
-        }
-
-        if (lastKey == DIGIT || lastKey == DECIMAL) {
-            if (lastOperation != "" && operation == PERCENT) {
-                handlePercent()
-                lastOperation = ""
-            } else {
-                // split to multiple lines just to see when does the crash happen
-                secondValue = when (operation) {
-                    PLUS -> getSecondValue()
-                    MINUS -> getSecondValue()
-                    MULTIPLY -> getSecondValue()
-                    DIVIDE -> getSecondValue()
-                    ROOT -> getSecondValue()
-                    POWER -> getSecondValue()
-                    PERCENT -> getSecondValue()
-                    else -> getSecondValue()
-                }
-
-                calculateResult()
-
-                if (!operations.contains(inputDisplayedFormula.last().toString())) {
-                    if (!inputDisplayedFormula.contains("÷")) {
-                        inputDisplayedFormula += getSign(operation)
-                    }
-                }
-            }
-        }
-
-        if (getSecondValue() == BigDecimal.ZERO && inputDisplayedFormula.contains("÷")) {
-            lastKey = DIVIDE
-            lastOperation = DIVIDE
-        } else if(operation != PERCENT) {
-            lastKey = operation
-            lastOperation = operation
-        }
-
-        showNewResult(inputDisplayedFormula)
-    }
-
-    fun turnToNegative(): Boolean {
-        if (inputDisplayedFormula.isEmpty()) {
-            return false
-        }
-
-        if (!inputDisplayedFormula.trimStart('-').any { it.toString() in operations } &&
-            try {
-                inputDisplayedFormula.removeGroupSeparator().toBigDecimal() != BigDecimal.ZERO
-            } catch (_: Exception) {
-                false
-            }) {
-            inputDisplayedFormula = if (inputDisplayedFormula.first() == '-') {
-                inputDisplayedFormula.substring(1)
-            } else {
-                "-$inputDisplayedFormula"
-            }
-
-            showNewResult(inputDisplayedFormula)
-            return true
-        }
-
-        return false
-    }
-
-    // handle percents manually, it doesn't seem to be possible via EvalEx. "%" is used only for modulo there
-    // handle cases like 10+200% here
-    @Suppress("SwallowedException")
-    private fun handlePercent() {
-        val result = try {
-            calculatePercentage(baseValue, getSecondValue(), lastOperation)
-        } catch (_: ArithmeticException) {
-            // Return zero if percentage calculation fails (e.g., division by zero)
-            BigDecimal.ZERO
-        }
-
-        showNewFormula("${baseValue.format()}${getSign(lastOperation)}${getSecondValue().format()}%")
-        inputDisplayedFormula = result.format()
-        showNewResult(result.format())
-        baseValue = result
+        lastKeyType = "operator"
+        refreshDisplay()
     }
 
     fun handleEquals() {
-        if (lastKey == EQUALS) {
-            calculateResult()
-        }
-
-        if (lastKey != DIGIT && lastKey != DECIMAL) {
+        // 无效表达式检查
+        if (rawExpression.isEmpty() || rawExpression.matches(Regex("^[+\\-×÷^√%]+$"))) {
+            errorHandler.handle(EvalError.SyntaxError)
             return
         }
 
-        secondValue = getSecondValue()
-        calculateResult()
-        if ((lastOperation == DIVIDE || lastOperation == PERCENT) && secondValue == BigDecimal.ZERO) {
-            lastKey = DIGIT
-            return
-        }
+        // 处理连续等号：按新要求废除重复等号求值（不再自动重复运算）
+        // 因此每次等号都直接对当前表达式求值
+        val exprToEval = rawExpression
 
-        lastKey = EQUALS
-    }
+        when (val result = evaluator.evaluate(exprToEval)) {
+            is EvalResult.Success -> {
+                val resultStr = result.value.toPlainString()
+                // 记录历史（原始格式）
+                historyManager.addEntry(exprToEval, resultStr)
 
-    private fun getSecondValue(): BigDecimal {
-        val valueToCheck = inputDisplayedFormula.trimStart('-').removeGroupSeparator()
+                // 更新状态
+                lastResult = result.value
+                lastRawExpression = exprToEval
+                rawExpression = resultStr
+                lastKeyType = EQUALS
 
-        var value = valueToCheck.substring(valueToCheck.indexOfAny(operations) + 1)
-        if (value == "") {
-            value = "0"
-        }
-
-        return try {
-            value.toBigDecimal()
-        } catch (e: NumberFormatException) {
-            context.showErrorToast(e)
-            BigDecimal.ZERO
-        }
-    }
-
-    private fun calculateResult() {
-        if (lastOperation == ROOT && inputDisplayedFormula.startsWith("√")) {
-            baseValue = BigDecimal.ONE
-        }
-
-        if (lastKey != EQUALS) {
-            val valueToCheck = inputDisplayedFormula.trimStart('-').removeGroupSeparator()
-
-            if (inputDisplayedFormula.startsWith("√")) {
-                val numberAfterRoot = valueToCheck.substring(1)
-                try {
-                    secondValue = numberAfterRoot.toBigDecimal()
-                } catch (e: NumberFormatException) {
-                    context.showErrorToast(e)
-                    secondValue = BigDecimal.ZERO
-                }
-            } else {
-                val parts = valueToCheck.split(operationsRegex).filter { it != "" }
-                if (parts.isEmpty()) {
-                    return
-                }
-
-                try {
-                    baseValue = parts.first().toBigDecimal()
-                } catch (e: NumberFormatException) {
-                    context.showErrorToast(e)
-                }
-
-                if (inputDisplayedFormula.startsWith("-")) {
-                    baseValue = baseValue.negate()
-                }
-
-                secondValue = parts.getOrNull(1)?.toBigDecimal() ?: secondValue
+                refreshDisplay()
+            }
+            is EvalResult.Failure -> {
+                errorHandler.handle(result.error)
+                // 失败时不修改 rawExpression 等状态
             }
         }
-
-        if (lastOperation != "") {
-            val sign = getSign(lastOperation)
-            val formattedBaseValue = baseValue.format().removeGroupSeparator()
-            val formatterSecondValue = secondValue.format().removeGroupSeparator()
-
-            val expression = if (sign == "√") {
-                "$formattedBaseValue*SQRT($formatterSecondValue)"
-            } else {
-                "$formattedBaseValue$sign$formatterSecondValue"
-                    .replace("×", "*")
-                    .replace("÷", "/")
-            }
-
-            try {
-                if (sign == "÷" && secondValue == BigDecimal.ZERO) {
-                    context.toast(R.string.formula_divide_by_zero_error)
-                    return
-                }
-
-                // handle percents manually, it doesn't seem to be possible via EvalEx.
-                // "%" is used only for modulo there
-                // handle cases like 10%200 here
-                val result = if (sign == "%") {
-                    val secondPercentValue = secondValue.divide(BigDecimal("100"), MATH_CONTEXT)
-                    val second = secondPercentValue.format().removeGroupSeparator()
-                    val percentExpression = "$formattedBaseValue*$second"
-                    val expr = Expression(percentExpression)
-                    expr.evaluate().numberValue
-                } else {
-                    val expr = Expression(expression)
-                    val evaluationResult = expr.evaluate()
-                    evaluationResult.numberValue
-                }
-
-                showNewResult(result.format())
-                val newFormula = "${baseValue.format()}$sign${secondValue.format()}"
-                HistoryHelper(context).insertOrUpdateHistoryEntry(
-                    History(
-                        id = null,
-                        formula = newFormula,
-                        result = result.format(),
-                        timestamp = System.currentTimeMillis()
-                    )
-                )
-                showNewFormula(newFormula)
-                inputDisplayedFormula = result.format()
-                baseValue = result
-            } catch (_: Exception) {
-                context.toast(org.fossify.commons.R.string.unknown_error_occurred)
-            }
-        }
-    }
-
-    private fun calculatePercentage(
-        baseValue: BigDecimal,
-        secondValue: BigDecimal,
-        sign: String
-    ): BigDecimal {
-        if (secondValue == BigDecimal.ZERO) {
-            throw ArithmeticException("Division by zero in percentage calculation")
-        }
-
-        return when (sign) {
-            MULTIPLY -> {
-                val partial = BigDecimal("100").divide(secondValue, MATH_CONTEXT)
-                baseValue.divide(partial, MATH_CONTEXT)
-            }
-
-            DIVIDE -> {
-                val partial = BigDecimal("100").divide(secondValue, MATH_CONTEXT)
-                baseValue.multiply(partial, MATH_CONTEXT)
-            }
-
-            PLUS -> {
-                val partial = baseValue.divide(
-                    BigDecimal("100").divide(secondValue, MATH_CONTEXT), MATH_CONTEXT
-                )
-                baseValue.add(partial, MATH_CONTEXT)
-            }
-
-            MINUS -> {
-                val partial = baseValue.divide(
-                    BigDecimal("100").divide(secondValue, MATH_CONTEXT), MATH_CONTEXT
-                )
-                baseValue.subtract(partial, MATH_CONTEXT)
-            }
-
-            PERCENT -> {
-                val partial = baseValue.remainder(secondValue, MATH_CONTEXT)
-                    .divide(BigDecimal("100"), MATH_CONTEXT)
-                partial
-            }
-
-            else -> baseValue.divide(
-                BigDecimal("100").multiply(secondValue, MATH_CONTEXT), MATH_CONTEXT
-            )
-        }
-    }
-
-    private fun showNewResult(value: String) {
-        currentResult = value
-        callback!!.showNewResult(value, context)
-    }
-
-    private fun showNewFormula(value: String) {
-        previousCalculation = value
-        callback!!.showNewFormula(value, context)
     }
 
     fun handleClear() {
-        val lastDeletedValue = inputDisplayedFormula.lastOrNull().toString()
-
-        var newValue = inputDisplayedFormula.dropLast(1)
-        if (newValue == "" || newValue == "0") {
-            newValue = "0"
-            lastKey = CLEAR
-            resetValues()
-        } else {
-            if (operations.contains(lastDeletedValue) || lastKey == EQUALS) {
-                lastOperation = ""
-            }
-            val lastValue = newValue.last().toString()
-            lastKey = when {
-                operations.contains(lastValue) -> CLEAR
-                lastValue == decimalSeparator -> DECIMAL
-                else -> DIGIT
-            }
+        if (rawExpression.isNotEmpty()) {
+            rawExpression = rawExpression.dropLast(1)
         }
-
-        newValue = newValue.trimEnd(groupingSeparator.single())
-        inputDisplayedFormula = newValue
-        addThousandsDelimiter()
-        showNewResult(inputDisplayedFormula)
+        if (rawExpression.isEmpty()) {
+            rawExpression = "0"
+        }
+        // 如果清空后为 "0" 且之前是计算结果，可选择性重置上次结果，但保持简单
+        if (rawExpression == "0") {
+            lastResult = null
+            lastRawExpression = ""
+            lastKeyType = ""
+        } else {
+            lastKeyType = CLEAR
+        }
+        refreshDisplay()
     }
 
     fun handleReset() {
-        resetValues()
-        showNewResult("0")
-        showNewFormula("")
-        inputDisplayedFormula = ""
+        rawExpression = "0"
+        lastResult = null
+        lastRawExpression = ""
+        lastKeyType = ""
+        refreshDisplay()
     }
 
-    private fun resetValues() {
-        baseValue = BigDecimal.ZERO
-        secondValue = BigDecimal.ZERO
-        lastKey = ""
-        lastOperation = ""
+    fun turnToNegative(): Boolean {
+        // 找到 rawExpression 中最后一个数字段（可能带负号）
+        val regex = Regex("-?\\d+(?:\\.\\d+)?")
+        val matches = regex.findAll(rawExpression).toList()
+        if (matches.isEmpty()) return false
+
+        val lastMatch = matches.last()
+        val numStr = lastMatch.value
+        val newNumStr = if (numStr.startsWith('-')) numStr.drop(1) else "-$numStr"
+        rawExpression = rawExpression.replaceRange(lastMatch.range, newNumStr)
+        refreshDisplay()
+        return true
     }
 
-    private fun getSign(lastOperation: String) = when (lastOperation) {
+    fun getCalculatorStateJson(): JSONObject {
+        val json = JSONObject()
+        json.put(INPUT_DISPLAYED_FORMULA, rawExpression)
+        json.put(SECOND_VALUE, lastResult?.toPlainString() ?: "")
+        json.put(PREVIOUS_CALCULATION, lastRawExpression)
+        json.put(LAST_KEY, lastKeyType)
+        // 其余字段保留为空字符串以兼容旧结构（但不会被读取）
+        json.put(RES, "")
+        json.put(LAST_OPERATION, "")
+        json.put(BASE_VALUE, "")
+        return json
+    }
+
+    fun loadRawExpression(expression: String) {
+        handleReset()
+        rawExpression = expression
+        lastKeyType = ""
+        refreshDisplay()
+    }
+
+    // ==================== 私有辅助 ====================
+
+    private fun refreshDisplay() {
+        // 公式显示：原始格式 -> 本地化显示
+        val displayFormula = formatter.toDisplay(rawExpression)
+        callback?.showNewFormula(displayFormula, context)
+
+        // 结果预览：尝试求值，失败则显示空字符串
+        val previewResult = evaluator.evaluateOrNull(rawExpression)
+        val displayResult = previewResult?.let { formatter.toDisplay(it.toPlainString()) } ?: ""
+        callback?.showNewResult(displayResult, context)
+    }
+
+    private fun getSign(operation: String) = when (operation) {
         MINUS -> "-"
         MULTIPLY -> "×"
         DIVIDE -> "÷"
@@ -420,71 +201,23 @@ class CalculatorImpl(
         else -> "+"
     }
 
-    fun numpadClicked(id: Int) {
-        if (inputDisplayedFormula == "NaN") {
-            inputDisplayedFormula = ""
-        }
-
-        if (lastKey == EQUALS) {
-            lastOperation = EQUALS
-        }
-
-        lastKey = DIGIT
-
-        when (id) {
-            R.id.btn_decimal -> decimalClicked()
-            R.id.btn_0 -> zeroClicked()
-            R.id.btn_1 -> addDigit(1)
-            R.id.btn_2 -> addDigit(2)
-            R.id.btn_3 -> addDigit(3)
-            R.id.btn_4 -> addDigit(4)
-            R.id.btn_5 -> addDigit(5)
-            R.id.btn_6 -> addDigit(6)
-            R.id.btn_7 -> addDigit(7)
-            R.id.btn_8 -> addDigit(8)
-            R.id.btn_9 -> addDigit(9)
-        }
-    }
-
-    fun addNumberToFormula(number: String) {
-        handleReset()
-        inputDisplayedFormula = number
-        addThousandsDelimiter()
-        showNewResult(inputDisplayedFormula)
-    }
-
-    private fun BigDecimal.format() = formatter.bigDecimalToString(this)
-
-    private fun String.removeGroupSeparator() = formatter.removeGroupingSeparator(this)
-
-    fun getCalculatorStateJson(): JSONObject {
-        val jsonObj = JSONObject()
-        jsonObj.put(RES, currentResult)
-        jsonObj.put(PREVIOUS_CALCULATION, previousCalculation)
-        jsonObj.put(LAST_KEY, lastKey)
-        jsonObj.put(LAST_OPERATION, lastOperation)
-        jsonObj.put(BASE_VALUE, baseValue.toString())
-        jsonObj.put(SECOND_VALUE, secondValue.toString())
-        jsonObj.put(INPUT_DISPLAYED_FORMULA, inputDisplayedFormula)
-        return jsonObj
-    }
-
     private fun setFromSaveInstanceState(json: String) {
-        val jsonObject = JSONTokener(json).nextValue() as JSONObject
-        currentResult = jsonObject.getString(RES)
-        previousCalculation = jsonObject.getString(PREVIOUS_CALCULATION)
-        lastKey = jsonObject.getString(LAST_KEY)
-        lastOperation = jsonObject.getString(LAST_OPERATION)
-        baseValue = try {
-            BigDecimal(jsonObject.getString(BASE_VALUE))
-        } catch (_: Exception) {
-            BigDecimal.ZERO
+        try {
+            val jsonObject = JSONTokener(json).nextValue() as JSONObject
+            rawExpression = jsonObject.optString(INPUT_DISPLAYED_FORMULA, "0")
+            lastResult = jsonObject.optString(SECOND_VALUE).takeIf { it.isNotEmpty() }?.toBigDecimal()
+            lastRawExpression = jsonObject.optString(PREVIOUS_CALCULATION, "")
+            lastKeyType = jsonObject.optString(LAST_KEY, "")
+        } catch (e: Exception) {
+            // 恢复失败时使用默认值
+            rawExpression = "0"
+            lastResult = null
+            lastRawExpression = ""
+            lastKeyType = ""
         }
-        secondValue = try {
-            BigDecimal(jsonObject.getString(SECOND_VALUE))
-        } catch (_: Exception) {
-            BigDecimal.ZERO
-        }
-        inputDisplayedFormula = jsonObject.getString(INPUT_DISPLAYED_FORMULA)
     }
+
+    // 保留原 Calculator 接口中使用的常量（这里假设它们已在文件中定义）
+    // 注意：原代码中的常量如 PLUS, MINUS, EQUALS 等未在此重写文件中导入，
+    // 但它们在编译时存在（来自同一个包的其他文件）。我们保持引用不变。
 }
