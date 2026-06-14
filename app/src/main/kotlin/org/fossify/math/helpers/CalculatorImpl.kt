@@ -80,7 +80,12 @@ class CalculatorImpl(
 
         // 避免连续输入两个运算符（但允许，由求值时处理）
         val operator = getSign(operation)  // 返回 + - × ÷ ^ √ %
-        rawExpression += operator
+        // 根号特殊处理：当表达式仅为 "0" 时，替换而不是追加
+        if (operation == ROOT && rawExpression == "0") {
+            rawExpression = operator   // 变成 "√"
+        } else {
+            rawExpression += operator
+        }
 
         lastKeyType = "operator"
         refreshDisplay()
@@ -100,8 +105,11 @@ class CalculatorImpl(
         when (val result = evaluator.evaluate(exprToEval)) {
             is EvalResult.Success -> {
                 val resultStr = result.value.toPlainString()
-                // 记录历史（原始格式）
-                historyManager.addEntry(exprToEval, resultStr)
+                // 记录历史 ，防止重复写入
+                val shouldAddToHistory = !(lastResult != null && rawExpression == lastResult?.toPlainString())
+                if (shouldAddToHistory) {
+                    historyManager.addEntry(exprToEval, resultStr)
+                }
 
                 // 更新状态
                 lastResult = result.value
