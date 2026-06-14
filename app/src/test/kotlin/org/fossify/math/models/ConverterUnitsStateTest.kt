@@ -55,9 +55,9 @@ class ConverterUnitsStateTest {
         val topUnit = org.fossify.math.helpers.converters.VolumeConverter.Unit.Liter
         val bottomUnit = org.fossify.math.helpers.converters.VolumeConverter.Unit.Milliliter
         val state = ConverterUnitsState(topUnit, bottomUnit)
-        val copied = state.copy(topUnit = org.fossify.math.helpers.converters.VolumeConverter.Unit.Gallon)
+        val copied = state.copy(topUnit = org.fossify.math.helpers.converters.VolumeConverter.Unit.GallonUS)
         assertEquals(bottomUnit, copied.bottomUnit)
-        assertEquals(org.fossify.math.helpers.converters.VolumeConverter.Unit.Gallon, copied.topUnit)
+        assertEquals(org.fossify.math.helpers.converters.VolumeConverter.Unit.GallonUS, copied.topUnit)
     }
 
     @Test
