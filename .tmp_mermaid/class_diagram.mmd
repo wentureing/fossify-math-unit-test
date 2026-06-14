@@ -1,0 +1,84 @@
+classDiagram
+    class MainActivity {
+        -CalculatorImpl calculatorImpl
+        -NumberFormatHelper numberFormatHelper
+        +numpadClicked(viewId: Int)
+        +showNewResult(value: String)
+        +showNewFormula(value: String)
+    }
+    
+    class CalculatorImpl {
+        -Calculator callback
+        -Context context
+        -StringBuilder value
+        -StringBuilder formula
+        +numpadClicked(id: Int)
+        +handleResult()
+        +handleDelete()
+        +handleClear()
+        +getNewResult(): String
+    }
+    
+    class Calculator {
+        <<interface>>
+        +showNewResult(value: String)*
+        +showNewFormula(value: String)*
+    }
+    
+    class NumberFormatHelper {
+        -Locale locale
+        -String decimalSeparator
+        +formatForDisplay(value): String
+    }
+
+    class ConverterView {
+        -Converter currentConverter
+        +updateTopValue(text: String)
+        +convertValue()
+    }
+    
+    class Converter {
+        <<interface>>
+        +key: String
+        +units: List~Unit~
+        +convert(input, targetUnit)
+    }
+    
+    class LengthConverter { +key="length" 17units }
+    class AreaConverter { +key="area" 10units } 
+    class VolumeConverter { +key="volume" 24units }
+    class TemperatureConverter { +key="temp" 4units 非线性 }
+
+    class CalculatorDatabase {
+        -static instance?
+        +getInstance(context)*
+        +destroyInstance()
+    }
+    
+    class History {
+        <<Entity data class>>
+        +formula: String
+        +result: String
+        +timestamp: Long
+    }
+
+    class MyWidgetProvider {
+        -CalculatorImpl calculator
+        +onUpdate(context, ...)
+    }
+
+    MainActivity ..|> Calculator : implements
+    MainActivity --> CalculatorImpl : creates
+    MainActivity --> NumberFormatHelper : uses
+    CalculatorImpl ..|> Calculator : callback
+    ConverterView --> Converter : holds
+    Converter <|.. LengthConverter : impl
+    Converter <|.. AreaConverter : impl
+    Converter <|.. VolumeConverter : impl
+    Converter <|.. TemperatureConverter : impl
+    UnitConverterActivity --> ConverterView : contains
+    CalculatorDatabase --> History : manages
+    MyWidgetProvider ..|> Calculator : implements
+    MyWidgetProvider --> CalculatorImpl : creates
+
+    note for TemperatureConverter "非线性转换:\nC->K: K=C+27.15\nC->F: F=C*9/5+32"

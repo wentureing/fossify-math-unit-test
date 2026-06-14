@@ -12,6 +12,7 @@ class ConstantsTest {
         assertEquals("digit", DIGIT)
     }
 
+
     @Test
     fun equals_constant_is_correct() {
         assertEquals("equals", EQUALS)
