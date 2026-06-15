@@ -202,6 +202,13 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
+
+    // Compose UI Testing (版本与你的 Compose 1.7.8 一致)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
+    androidTestImplementation("androidx.compose.ui:ui-test-manifest:1.7.8")
+
+// Espresso Intents (用于验证 Activity 跳转)
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
 }
 
 
