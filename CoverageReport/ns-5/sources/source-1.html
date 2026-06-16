@@ -1,0 +1,189 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CalculatorDatabase</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.databases</a>
+</div>
+
+<h1>Coverage Summary for Class: CalculatorDatabase (org.fossify.math.databases)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CalculatorDatabase</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CalculatorDatabase$Companion</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (12/12)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.databases
+&nbsp;
+&nbsp;import android.content.Context
+&nbsp;import androidx.room.Database
+&nbsp;import androidx.room.Room
+&nbsp;import androidx.room.RoomDatabase
+&nbsp;import org.fossify.math.interfaces.CalculatorDao
+&nbsp;import org.fossify.math.models.History
+&nbsp;
+<b class="fc">&nbsp;@Database(entities = [History::class], version = 1)</b>
+&nbsp;abstract class CalculatorDatabase : RoomDatabase() {
+&nbsp;
+&nbsp;    abstract fun CalculatorDao(): CalculatorDao
+&nbsp;
+&nbsp;    companion object {
+&nbsp;        private var db: CalculatorDatabase? = null
+&nbsp;
+&nbsp;        fun getInstance(context: Context): CalculatorDatabase {
+<b class="fc">&nbsp;            if (db == null) {</b>
+<b class="fc">&nbsp;                synchronized(CalculatorDatabase::class) {</b>
+<b class="fc">&nbsp;                    if (db == null) {</b>
+<b class="fc">&nbsp;                        db = Room.databaseBuilder(</b>
+<b class="fc">&nbsp;                            context.applicationContext,</b>
+<b class="fc">&nbsp;                            CalculatorDatabase::class.java,</b>
+<b class="fc">&nbsp;                            &quot;calculator.db&quot;</b>
+&nbsp;                        )
+<b class="fc">&nbsp;                            .build()</b>
+<b class="fc">&nbsp;                        db!!.openHelper.setWriteAheadLoggingEnabled(true)</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                }</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return db!!</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        fun destroyInstance() {
+<b class="fc">&nbsp;            db = null</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-06-16 16:28</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,206 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ContextKt</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.extensions</a>
+</div>
+
+<h1>Coverage Summary for Class: ContextKt (org.fossify.math.extensions)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ContextKt</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (3/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    22.2%
+  </span>
+  <span class="absValue">
+    (4/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    28.6%
+  </span>
+  <span class="absValue">
+    (10/35)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.extensions
+&nbsp;
+&nbsp;import android.appwidget.AppWidgetManager
+&nbsp;import android.content.ComponentName
+&nbsp;import android.content.Context
+&nbsp;import android.content.Intent
+&nbsp;import android.graphics.Color
+&nbsp;import android.net.Uri
+&nbsp;import android.os.Build
+&nbsp;import android.provider.Settings
+&nbsp;import android.view.ViewGroup
+&nbsp;import android.widget.Button
+&nbsp;import android.widget.TextView
+&nbsp;import androidx.annotation.RequiresApi
+&nbsp;import org.fossify.commons.extensions.getProperBackgroundColor
+&nbsp;import org.fossify.commons.extensions.isDynamicTheme
+&nbsp;import org.fossify.commons.extensions.isSystemInDarkMode
+&nbsp;import org.fossify.commons.extensions.lightenColor
+&nbsp;import org.fossify.commons.extensions.showErrorToast
+&nbsp;import org.fossify.math.databases.CalculatorDatabase
+&nbsp;import org.fossify.math.helpers.Config
+&nbsp;import org.fossify.math.helpers.MyWidgetProvider
+&nbsp;import org.fossify.math.interfaces.CalculatorDao
+&nbsp;
+<b class="fc">&nbsp;val Context.config: Config get() = Config.newInstance(applicationContext)</b>
+&nbsp;
+&nbsp;val Context.calculatorDB: CalculatorDao
+<b class="fc">&nbsp;    get() = CalculatorDatabase.getInstance(applicationContext).CalculatorDao()</b>
+&nbsp;
+&nbsp;// we are reusing the same layout in the app and widget, but cannot use MyTextView etc in a widget, so color regular view types like this
+&nbsp;fun Context.updateViewColors(viewGroup: ViewGroup, textColor: Int) {
+<b class="fc">&nbsp;    val cnt = viewGroup.childCount</b>
+<b class="fc">&nbsp;    (0 until cnt).map { viewGroup.getChildAt(it) }</b>
+<b class="fc">&nbsp;        .forEach {</b>
+<b class="fc">&nbsp;            when (it) {</b>
+<b class="pc">&nbsp;                is Button -&gt; it.setTextColor(textColor)</b>
+<b class="fc">&nbsp;                is TextView -&gt; it.setTextColor(textColor)</b>
+<b class="pc">&nbsp;                is ViewGroup -&gt; updateViewColors(it, textColor)</b>
+&nbsp;            }
+<b class="fc">&nbsp;        }</b>
+&nbsp;}
+&nbsp;
+&nbsp;fun Context.updateWidgets() {
+<b class="nc">&nbsp;    val widgetIDs = AppWidgetManager.getInstance(applicationContext)</b>
+<b class="nc">&nbsp;        ?.getAppWidgetIds(ComponentName(applicationContext, MyWidgetProvider::class.java))</b>
+&nbsp;        ?: return
+<b class="nc">&nbsp;    if (widgetIDs.isNotEmpty()) {</b>
+<b class="nc">&nbsp;        Intent(applicationContext, MyWidgetProvider::class.java).apply {</b>
+<b class="nc">&nbsp;            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE</b>
+<b class="nc">&nbsp;            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIDs)</b>
+<b class="nc">&nbsp;            sendBroadcast(this)</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+&nbsp;fun Context.launchChangeAppLanguageIntent() {
+&nbsp;    try {
+<b class="nc">&nbsp;        Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {</b>
+<b class="nc">&nbsp;            data = Uri.fromParts(&quot;package&quot;, packageName, null)</b>
+<b class="nc">&nbsp;            startActivity(this)</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    } catch (e: Exception) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {</b>
+<b class="nc">&nbsp;                data = Uri.fromParts(&quot;package&quot;, packageName, null)</b>
+<b class="nc">&nbsp;                startActivity(this)</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;        } catch (e: Exception) {
+<b class="nc">&nbsp;            showErrorToast(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;fun Context.getStrokeColor(): Int {
+<b class="nc">&nbsp;    return if (isDynamicTheme()) {</b>
+<b class="nc">&nbsp;        if (isSystemInDarkMode()) {</b>
+<b class="nc">&nbsp;            resources.getColor(org.fossify.commons.R.color.md_grey_800, theme)</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            resources.getColor(org.fossify.commons.R.color.md_grey_400, theme)</b>
+&nbsp;        }
+&nbsp;    } else {
+<b class="nc">&nbsp;        val lighterColor = getProperBackgroundColor().lightenColor()</b>
+<b class="nc">&nbsp;        if (lighterColor == Color.WHITE || lighterColor == Color.BLACK) {</b>
+<b class="nc">&nbsp;            resources.getColor(org.fossify.commons.R.color.divider_grey, theme)</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            lighterColor</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-06-16 16:28</div>
+</div>
+</body>
+</html>

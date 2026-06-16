@@ -1,0 +1,357 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > WidgetConfigureActivity</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.activities</a>
+</div>
+
+<h1>Coverage Summary for Class: WidgetConfigureActivity (org.fossify.math.activities)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">WidgetConfigureActivity</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/93)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">WidgetConfigureActivity$seekbarChangeListener$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">WidgetConfigureActivity$special$$inlined$viewBinding$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/98)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.activities
+&nbsp;
+&nbsp;import android.appwidget.AppWidgetManager
+&nbsp;import android.content.Intent
+&nbsp;import android.content.res.ColorStateList
+&nbsp;import android.graphics.Color
+&nbsp;import android.os.Bundle
+&nbsp;import android.widget.RemoteViews
+&nbsp;import android.widget.SeekBar
+&nbsp;import android.widget.TextView
+&nbsp;import org.fossify.commons.dialogs.ColorPickerDialog
+&nbsp;import org.fossify.commons.dialogs.FeatureLockedDialog
+&nbsp;import org.fossify.commons.extensions.adjustAlpha
+&nbsp;import org.fossify.commons.extensions.applyColorFilter
+&nbsp;import org.fossify.commons.extensions.beVisible
+&nbsp;import org.fossify.commons.extensions.getContrastColor
+&nbsp;import org.fossify.commons.extensions.getProperPrimaryColor
+&nbsp;import org.fossify.commons.extensions.isDynamicTheme
+&nbsp;import org.fossify.commons.extensions.isOrWasThankYouInstalled
+&nbsp;import org.fossify.commons.extensions.setFillWithStroke
+&nbsp;import org.fossify.commons.extensions.viewBinding
+&nbsp;import org.fossify.commons.helpers.IS_CUSTOMIZING_COLORS
+&nbsp;import org.fossify.math.R
+&nbsp;import org.fossify.math.databinding.WidgetConfigBinding
+&nbsp;import org.fossify.math.extensions.config
+&nbsp;import org.fossify.math.helpers.MyWidgetProvider
+&nbsp;
+<b class="nc">&nbsp;class WidgetConfigureActivity : SimpleActivity() {</b>
+&nbsp;    private var mBgAlpha = 0f
+&nbsp;    private var mWidgetId = 0
+&nbsp;    private var mBgColor = 0
+&nbsp;    private var mTextColor = 0
+&nbsp;    private var mBgColorWithoutTransparency = 0
+&nbsp;    private var mFeatureLockedDialog: FeatureLockedDialog? = null
+&nbsp;
+<b class="nc">&nbsp;    private val binding by viewBinding(WidgetConfigBinding::inflate)</b>
+&nbsp;
+&nbsp;    public override fun onCreate(savedInstanceState: Bundle?) {
+<b class="nc">&nbsp;        useDynamicTheme = false</b>
+<b class="nc">&nbsp;        super.onCreate(savedInstanceState)</b>
+<b class="nc">&nbsp;        setResult(RESULT_CANCELED)</b>
+<b class="nc">&nbsp;        setContentView(binding.root)</b>
+<b class="nc">&nbsp;        setupEdgeToEdge(padTopSystem = listOf(binding.configHolder), padBottomSystem = listOf(binding.root))</b>
+<b class="nc">&nbsp;        initVariables()</b>
+&nbsp;
+<b class="nc">&nbsp;        val isCustomizingColors = intent.extras?.getBoolean(IS_CUSTOMIZING_COLORS) ?: false</b>
+<b class="nc">&nbsp;        mWidgetId = intent.extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)</b>
+<b class="nc">&nbsp;            ?: AppWidgetManager.INVALID_APPWIDGET_ID</b>
+&nbsp;
+<b class="nc">&nbsp;        if (mWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID &amp;&amp; !isCustomizingColors) {</b>
+<b class="nc">&nbsp;            finish()</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        binding.configSave.setOnClickListener { saveConfig() }</b>
+<b class="nc">&nbsp;        binding.configBgColor.setOnClickListener { pickBackgroundColor() }</b>
+<b class="nc">&nbsp;        binding.configTextColor.setOnClickListener { pickTextColor() }</b>
+&nbsp;
+<b class="nc">&nbsp;        val primaryColor = getProperPrimaryColor()</b>
+<b class="nc">&nbsp;        binding.configBgSeekbar.setColors(mTextColor, primaryColor, primaryColor)</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!isCustomizingColors &amp;&amp; !isOrWasThankYouInstalled()) {</b>
+<b class="nc">&nbsp;            mFeatureLockedDialog = FeatureLockedDialog(this) {</b>
+<b class="nc">&nbsp;                if (!isOrWasThankYouInstalled()) {</b>
+<b class="nc">&nbsp;                    finish()</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    override fun onResume() {
+<b class="nc">&nbsp;        super.onResume()</b>
+<b class="nc">&nbsp;        window.decorView.setBackgroundColor(0)</b>
+&nbsp;
+<b class="nc">&nbsp;        if (mFeatureLockedDialog != null &amp;&amp; isOrWasThankYouInstalled()) {</b>
+<b class="nc">&nbsp;            mFeatureLockedDialog?.dismissDialog()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun initVariables() {
+<b class="nc">&nbsp;        mBgColor = config.widgetBgColor</b>
+<b class="nc">&nbsp;        mBgAlpha = Color.alpha(mBgColor) / 255.toFloat()</b>
+&nbsp;
+<b class="nc">&nbsp;        binding.configCalc.btnReset.beVisible()</b>
+<b class="nc">&nbsp;        mBgColorWithoutTransparency =</b>
+<b class="nc">&nbsp;            Color.rgb(Color.red(mBgColor), Color.green(mBgColor), Color.blue(mBgColor))</b>
+<b class="nc">&nbsp;        binding.configBgSeekbar.setOnSeekBarChangeListener(seekbarChangeListener)</b>
+<b class="nc">&nbsp;        binding.configBgSeekbar.progress = (mBgAlpha * 100).toInt()</b>
+<b class="nc">&nbsp;        updateBackgroundColor()</b>
+&nbsp;
+<b class="nc">&nbsp;        mTextColor = config.widgetTextColor</b>
+<b class="nc">&nbsp;        if (mTextColor == resources.getColor(</b>
+<b class="nc">&nbsp;                org.fossify.commons.R.color.default_widget_text_color, theme</b>
+<b class="nc">&nbsp;            ) &amp;&amp; isDynamicTheme()</b>
+&nbsp;        ) {
+<b class="nc">&nbsp;            mTextColor = resources.getColor(org.fossify.commons.R.color.you_primary_color, theme)</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        updateTextColor()</b>
+&nbsp;
+<b class="nc">&nbsp;        binding.configCalc.formula.text = &quot;15,937*5&quot;</b>
+<b class="nc">&nbsp;        binding.configCalc.result.text = &quot;79,685&quot;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun saveConfig() {
+<b class="nc">&nbsp;        val appWidgetManager = AppWidgetManager.getInstance(this) ?: return</b>
+<b class="nc">&nbsp;        val views = RemoteViews(packageName, R.layout.widget).apply {</b>
+<b class="nc">&nbsp;            applyColorFilter(binding.widgetBackground.id, mBgColor)</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+<b class="nc">&nbsp;        appWidgetManager.updateAppWidget(mWidgetId, views)</b>
+&nbsp;
+<b class="nc">&nbsp;        storeWidgetColors()</b>
+<b class="nc">&nbsp;        requestWidgetUpdate()</b>
+&nbsp;
+<b class="nc">&nbsp;        Intent().apply {</b>
+<b class="nc">&nbsp;            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mWidgetId)</b>
+<b class="nc">&nbsp;            setResult(RESULT_OK, this)</b>
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        finish()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun storeWidgetColors() {
+<b class="nc">&nbsp;        config.apply {</b>
+<b class="nc">&nbsp;            widgetBgColor = mBgColor</b>
+<b class="nc">&nbsp;            widgetTextColor = mTextColor</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun requestWidgetUpdate() {
+<b class="nc">&nbsp;        Intent(</b>
+<b class="nc">&nbsp;            AppWidgetManager.ACTION_APPWIDGET_UPDATE,</b>
+<b class="nc">&nbsp;            null,</b>
+<b class="nc">&nbsp;            this,</b>
+<b class="nc">&nbsp;            MyWidgetProvider::class.java</b>
+<b class="nc">&nbsp;        ).apply {</b>
+<b class="nc">&nbsp;            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(mWidgetId))</b>
+<b class="nc">&nbsp;            sendBroadcast(this)</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun updateBackgroundColor() {
+<b class="nc">&nbsp;        mBgColor = mBgColorWithoutTransparency.adjustAlpha(mBgAlpha)</b>
+<b class="nc">&nbsp;        binding.widgetBackground.applyColorFilter(mBgColor)</b>
+<b class="nc">&nbsp;        binding.configBgColor.setFillWithStroke(mBgColor, mBgColor)</b>
+<b class="nc">&nbsp;        binding.configSave.backgroundTintList = ColorStateList.valueOf(getProperPrimaryColor())</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun updateTextColor() {
+<b class="nc">&nbsp;        binding.configTextColor.setFillWithStroke(mTextColor, mTextColor)</b>
+&nbsp;
+<b class="nc">&nbsp;        val viewIds = intArrayOf(</b>
+<b class="nc">&nbsp;            R.id.btn_0, R.id.btn_1, R.id.btn_2, R.id.btn_3, R.id.btn_4, R.id.btn_5, R.id.btn_6,</b>
+<b class="nc">&nbsp;            R.id.btn_7, R.id.btn_8, R.id.btn_9, R.id.btn_percent, R.id.btn_power, R.id.btn_root,</b>
+<b class="nc">&nbsp;            R.id.btn_clear, R.id.btn_reset, R.id.btn_divide, R.id.btn_multiply,</b>
+<b class="nc">&nbsp;            R.id.btn_minus, R.id.btn_plus, R.id.btn_decimal, R.id.btn_equals</b>
+&nbsp;        )
+&nbsp;
+<b class="nc">&nbsp;        binding.configCalc.result.setTextColor(mTextColor)</b>
+<b class="nc">&nbsp;        binding.configCalc.formula.setTextColor(mTextColor)</b>
+<b class="nc">&nbsp;        binding.configSave.setTextColor(getProperPrimaryColor().getContrastColor())</b>
+&nbsp;
+<b class="nc">&nbsp;        viewIds.forEach {</b>
+<b class="nc">&nbsp;            (findViewById&lt;TextView&gt;(it)).setTextColor(mTextColor)</b>
+<b class="nc">&nbsp;            (findViewById&lt;TextView&gt;(it)).background = null</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun pickBackgroundColor() {
+<b class="nc">&nbsp;        ColorPickerDialog(this, mBgColorWithoutTransparency) { wasPositivePressed, color -&gt;</b>
+<b class="nc">&nbsp;            if (wasPositivePressed) {</b>
+<b class="nc">&nbsp;                mBgColorWithoutTransparency = color</b>
+<b class="nc">&nbsp;                updateBackgroundColor()</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun pickTextColor() {
+<b class="nc">&nbsp;        ColorPickerDialog(this, mTextColor) { wasPositivePressed, color -&gt;</b>
+<b class="nc">&nbsp;            if (wasPositivePressed) {</b>
+<b class="nc">&nbsp;                mTextColor = color</b>
+<b class="nc">&nbsp;                updateTextColor()</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private val seekbarChangeListener = object : SeekBar.OnSeekBarChangeListener {</b>
+&nbsp;        override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+<b class="nc">&nbsp;            mBgAlpha = progress.toFloat() / 100.toFloat()</b>
+<b class="nc">&nbsp;            updateBackgroundColor()</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        override fun onStartTrackingTouch(seekBar: SeekBar) {}</b>
+&nbsp;
+<b class="nc">&nbsp;        override fun onStopTrackingTouch(seekBar: SeekBar) {}</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-06-16 16:28</div>
+</div>
+</body>
+</html>

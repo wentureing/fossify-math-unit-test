@@ -1,0 +1,168 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NumberFormatHelperKt</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.fossify.math.helpers</a>
+</div>
+
+<h1>Coverage Summary for Class: NumberFormatHelperKt (org.fossify.math.helpers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NumberFormatHelperKt</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.fossify.math.helpers
+&nbsp;
+&nbsp;import java.math.BigDecimal
+&nbsp;import java.text.DecimalFormat
+&nbsp;import java.text.DecimalFormatSymbols
+&nbsp;
+&nbsp;class NumberFormatHelper(
+&nbsp;    val decimalSeparator: String = getDecimalSeparator(),
+&nbsp;    val groupingSeparator: String = getGroupingSeparator()
+&nbsp;) {
+&nbsp;    companion object {
+&nbsp;        private const val MAX_FRACTION_DIGITS = 15
+&nbsp;    }
+&nbsp;
+&nbsp;    fun bigDecimalToString(bd: BigDecimal): String {
+&nbsp;        val symbols = DecimalFormatSymbols.getInstance()
+&nbsp;
+&nbsp;        val formatter = DecimalFormat()
+&nbsp;        formatter.maximumFractionDigits = MAX_FRACTION_DIGITS
+&nbsp;        formatter.decimalFormatSymbols = symbols
+&nbsp;        formatter.isGroupingUsed = true
+&nbsp;
+&nbsp;        val result = formatter.format(bd)
+&nbsp;        return if (result.contains(decimalSeparator)) {
+&nbsp;            result.trimEnd(&#39;0&#39;).trimEnd(decimalSeparator.single())
+&nbsp;        } else {
+&nbsp;            result
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Suppress(&quot;SwallowedException&quot;)
+&nbsp;    fun addGroupingSeparators(str: String): String {
+&nbsp;        return try {
+&nbsp;            bigDecimalToString(removeGroupingSeparator(str).toBigDecimal())
+&nbsp;        } catch (_: NumberFormatException) {
+&nbsp;            // Return original string if it cannot be parsed as a valid number
+&nbsp;            str
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    fun removeGroupingSeparator(str: String): String {
+&nbsp;        return str.replace(groupingSeparator, &quot;&quot;).replace(decimalSeparator, &quot;.&quot;)
+&nbsp;    }
+&nbsp;
+&nbsp;    fun formatForDisplay(input: String): String {
+&nbsp;        var formatted = addGroupingSeparators(input)
+&nbsp;        // allow writing numbers like 0.003
+&nbsp;        if (input.contains(decimalSeparator)) {
+&nbsp;            val firstPart = formatted.substringBefore(decimalSeparator)
+&nbsp;            val lastPart = input.substringAfter(decimalSeparator)
+&nbsp;            formatted = &quot;$firstPart$decimalSeparator$lastPart&quot;
+&nbsp;        }
+&nbsp;
+&nbsp;        return formatted
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;fun getDecimalSeparator(): String {
+<b class="fc">&nbsp;    return DecimalFormatSymbols.getInstance().decimalSeparator.toString()</b>
+&nbsp;}
+&nbsp;
+&nbsp;fun getGroupingSeparator(): String {
+<b class="fc">&nbsp;    return DecimalFormatSymbols.getInstance().groupingSeparator.toString()</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-06-16 16:28</div>
+</div>
+</body>
+</html>
