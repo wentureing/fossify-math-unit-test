@@ -64,7 +64,9 @@ android {
 
     buildTypes {
         debug {
+            isDebuggable = true
             applicationIdSuffix = ".debug"
+            enableUnitTestCoverage = true
         }
         release {
             isMinifyEnabled = true
@@ -159,11 +161,6 @@ android {
             }
         }
     }
-    buildTypes {
-        debug {
-            enableUnitTestCoverage = true
-        }
-    }
 }
 
 detekt {
@@ -211,7 +208,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
 
     //测试内存泄漏
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+    //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
 }
 
 
