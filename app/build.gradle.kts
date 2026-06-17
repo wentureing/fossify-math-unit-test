@@ -209,6 +209,9 @@ dependencies {
 
 // Espresso Intents (用于验证 Activity 跳转)
     androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+
+    //测试内存泄漏
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
 }
 
 
